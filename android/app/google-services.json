@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "679860055501",
+    "project_id": "rntspots-65a06",
+    "storage_bucket": "rntspots-65a06.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:679860055501:android:eb49bd952ce4875fbfe884",
+        "android_client_info": {
+          "package_name": "com.example.rnt_spots"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAi5xNFlFZLYmF_j3Zu6o1-aMbg43u5-fw"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
