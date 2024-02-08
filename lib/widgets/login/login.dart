@@ -1,7 +1,41 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:fluttertoast/fluttertoast.dart';
+import 'package:rnt_spots/dtos/loginDto.dart';
+import 'package:rnt_spots/shared/error_dialog.dart';
+import 'package:rnt_spots/widgets/home/home.dart';
 import 'package:rnt_spots/widgets/register/register.dart';
 
-class Login extends StatelessWidget {
+class Login extends StatefulWidget {
+  const Login({super.key});
+
+  @override
+  State<Login> createState() => _LoginState();
+}
+
+class _LoginState extends State<Login> {
+  FirebaseFirestore firestore = FirebaseFirestore.instance;
+  final TextEditingController emailController = TextEditingController();
+  final TextEditingController passwordController = TextEditingController();
+  final _formKey = GlobalKey<FormState>();
+
+  @override
+  void initState() {
+    super.initState();
+    _checkLoggedIn();
+  }
+
+  void _checkLoggedIn() async {
+    const storage = FlutterSecureStorage();
+    final email = await storage.read(key: 'email');
+    if (email != null) {
+      // Navigate to home if email is present in secure storage
+      Navigator.pushReplacement(
+          context, MaterialPageRoute(builder: (context) => const Home()));
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -36,46 +70,86 @@ class Login extends StatelessWidget {
                 ),
               ),
               // Form
-              TextFormField(
-                decoration: const InputDecoration(labelText: 'Username'),
-              ),
-              const SizedBox(height: 16.0),
-              TextFormField(
-                decoration: const InputDecoration(labelText: 'Password'),
-                obscureText: true,
-              ),
+              Form(
+                  key: _formKey,
+                  child: Column(
+                    children: <Widget>[
+                      TextFormField(
+                        controller: emailController,
+                        decoration: const InputDecoration(
+                            labelText: 'Email',
+                            errorBorder: UnderlineInputBorder(
+                                borderSide:
+                                    BorderSide(color: Colors.redAccent))),
+                        validator: (value) {
+                          // Regular expression for email validation
+                          final emailRegex =
+                              RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$');
+
+                          if (value == null || value.isEmpty) {
+                            return 'Please enter your email address';
+                          } else if (!emailRegex.hasMatch(value)) {
+                            return 'Please enter a valid email address';
+                          }
+                          return null;
+                        },
+                      ),
+                      const SizedBox(height: 16.0),
+                      TextFormField(
+                        controller: passwordController,
+                        decoration: const InputDecoration(
+                          labelText: 'Password',
+                          errorBorder: UnderlineInputBorder(
+                            borderSide: BorderSide(color: Colors.redAccent),
+                          ),
+                        ),
+                        validator: (value) {
+                          if (value == null || value.isEmpty) {
+                            return 'Please enter Password';
+                          }
+                          return null;
+                        },
+                        obscureText: true,
+                      ),
+                      const SizedBox(height: 16.0),
+                      TextButton(
+                        onPressed: () {
+                          // Implement forgot password logic here
+                        },
+                        child: const Text(
+                          'Forgot Password?',
+                          style: TextStyle(
+                            color: Colors.grey,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 16.0),
+                      ElevatedButton(
+                        onPressed: () {
+                          if (_formKey.currentState!.validate()) {
+                            _formKey.currentState!.save();
+                            _login();
+                          }
+                        },
+                        style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.redAccent),
+                        child: const Padding(
+                          padding: EdgeInsets.all(8.0),
+                          child: Text(
+                            'Login',
+                            style: TextStyle(fontSize: 24, color: Colors.white),
+                          ),
+                        ),
+                      ),
+                    ],
+                  )),
               const SizedBox(height: 16.0),
               TextButton(
                 onPressed: () {
-                  // Implement forgot password logic here
-                },
-                child: const Text(
-                  'Forgot Password?',
-                  style: TextStyle(
-                    color: Colors.grey,
-                  ),
-                ),
-              ),
-              const SizedBox(height: 16.0),
-              ElevatedButton(
-                onPressed: () {
-                  // Implement your login logic here
-                },
-                style:
-                    ElevatedButton.styleFrom(backgroundColor: Colors.redAccent),
-                child: const Padding(
-                  padding: EdgeInsets.all(8.0),
-                  child: Text(
-                    'Login',
-                    style: TextStyle(fontSize: 24, color: Colors.white),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 16.0),
-              TextButton(
-                onPressed: () {
-                  Navigator.push(context,
-                      MaterialPageRoute(builder: (context) => Register()));
+                  Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                          builder: (context) => const Register()));
                 },
                 child: const Text(
                   'Create Account',
@@ -87,5 +161,38 @@ class Login extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  void _login() async {
+    final user = LoginDto(
+      email: emailController.text,
+      password: passwordController.text,
+    );
+
+    final querySnapshot = await firestore
+        .collection('Users')
+        .where('email', isEqualTo: user.email)
+        .where('password', isEqualTo: user.password)
+        .get();
+
+    if (querySnapshot.docs.isNotEmpty) {
+      // User with provided email and password exists
+      _saveEmailToStorage(user.email);
+      Fluttertoast.showToast(msg: "Successfully Login");
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => const Home()),
+      );
+    } else {
+      
+    print("Error: ${querySnapshot.docs}");
+      // User does not exist
+      ErrorDialog.showErrorDialog(context, "User does not exist!");
+    }
+  }
+
+  void _saveEmailToStorage(String email) async {
+    const storage = FlutterSecureStorage();
+    await storage.write(key: 'email', value: email);
   }
 }
