@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
-import 'package:rnt_spots/dtos/usersDto.dart';
+import 'package:rnt_spots/dtos/users_dto.dart';
 import 'package:rnt_spots/shared/error_dialog.dart';
 import 'package:rnt_spots/widgets/login/login.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -23,6 +23,7 @@ class _RegisterState extends State<Register> {
   final List<String> roles = ['Tenant', 'Landlord'];
 
   String selectedRole = 'Tenant';
+  bool _showPassword = false;
 
   @override
   Widget build(BuildContext context) {
@@ -118,12 +119,21 @@ class _RegisterState extends State<Register> {
 
                           TextFormField(
                             controller: passwordController,
-                            decoration: const InputDecoration(
-                              labelText: 'Password',
-                              errorBorder: UnderlineInputBorder(
-                                borderSide: BorderSide(color: Colors.redAccent),
-                              ),
-                            ),
+                            decoration: InputDecoration(
+                                labelText: 'Password',
+                                errorBorder: const UnderlineInputBorder(
+                                  borderSide:
+                                      BorderSide(color: Colors.redAccent),
+                                ),
+                                suffixIcon: IconButton(
+                                    icon: Icon(_showPassword
+                                        ? Icons.visibility
+                                        : Icons.visibility_off),
+                                    onPressed: () {
+                                      setState(() {
+                                        _showPassword = !_showPassword;
+                                      });
+                                    })),
                             validator: (value) {
                               final passwordRegex = RegExp(
                                   r'^(?=.*[A-Z])(?=.*[0-9])(?=.*[!@#$%^&*()-_=+{};:,<.>]).{7,}$');
@@ -135,7 +145,7 @@ class _RegisterState extends State<Register> {
                               }
                               return null;
                             },
-                            obscureText: true,
+                            obscureText: !_showPassword,
                           ),
                           const SizedBox(height: 12.0),
                           // Selector for role field

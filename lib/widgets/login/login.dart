@@ -1,9 +1,9 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:fluttertoast/fluttertoast.dart';
-import 'package:rnt_spots/dtos/loginDto.dart';
+import 'package:rnt_spots/dtos/login_dto.dart';
 import 'package:rnt_spots/shared/error_dialog.dart';
+import 'package:rnt_spots/shared/secure_storage.dart';
 import 'package:rnt_spots/widgets/home/home.dart';
 import 'package:rnt_spots/widgets/register/register.dart';
 
@@ -13,7 +13,7 @@ class Login extends StatefulWidget {
   @override
   State<Login> createState() => _LoginState();
 }
-
+final storage = SecureStorage();
 class _LoginState extends State<Login> {
   FirebaseFirestore firestore = FirebaseFirestore.instance;
   final TextEditingController emailController = TextEditingController();
@@ -27,9 +27,8 @@ class _LoginState extends State<Login> {
   }
 
   void _checkLoggedIn() async {
-    const storage = FlutterSecureStorage();
-    final email = await storage.read(key: 'email');
-    if (email != null) {
+    final email = await storage.getFromSecureStorage();
+    if (email != null || email!.isNotEmpty) {
       // Navigate to home if email is present in secure storage
       Navigator.pushReplacement(
           context, MaterialPageRoute(builder: (context) => const Home()));
@@ -177,22 +176,17 @@ class _LoginState extends State<Login> {
 
     if (querySnapshot.docs.isNotEmpty) {
       // User with provided email and password exists
-      _saveEmailToStorage(user.email);
+      storage.saveToSecureStorage(user.email);
+      
       Fluttertoast.showToast(msg: "Successfully Login");
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(builder: (context) => const Home()),
       );
     } else {
-      
-    print("Error: ${querySnapshot.docs}");
+      print("Error: ${querySnapshot.docs}");
       // User does not exist
       ErrorDialog.showErrorDialog(context, "User does not exist!");
     }
-  }
-
-  void _saveEmailToStorage(String email) async {
-    const storage = FlutterSecureStorage();
-    await storage.write(key: 'email', value: email);
   }
 }

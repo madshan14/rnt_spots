@@ -6,7 +6,7 @@ class UserDto {
   final String email;
   final String firstName;
   final String lastName;
-  final String password;
+  final String? password;
   final String role;
   final double? balance;
   final DateTime createdAt;
@@ -15,7 +15,7 @@ class UserDto {
       {required this.email,
       required this.firstName,
       required this.lastName,
-      required this.password,
+      this.password,
       required this.role,
       double? balance,
       DateTime? createdAt})
