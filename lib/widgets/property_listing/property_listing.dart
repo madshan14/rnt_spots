@@ -5,9 +5,10 @@ import 'package:rnt_spots/dtos/users_dto.dart';
 import 'package:rnt_spots/widgets/home/home.dart';
 import 'package:rnt_spots/widgets/property_listing/add_property.dart';
 import 'package:carousel_slider/carousel_slider.dart';
+import 'package:rnt_spots/widgets/property_listing/property_details.dart';
 
 class PropertyListing extends StatefulWidget {
-  const PropertyListing({Key? key});
+  const PropertyListing({super.key});
 
   @override
   State<PropertyListing> createState() => _PropertyListingState();
@@ -25,22 +26,32 @@ class _PropertyListingState extends State<PropertyListing> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: FutureBuilder<List<PropertyDto>>(
-        future: getPropertyList(),
+      appBar: AppBar(
+        backgroundColor: Colors.white,
+        foregroundColor: Colors.white,
+      ),
+      body: StreamBuilder<QuerySnapshot>(
+        stream: FirebaseFirestore.instance.collection('Properties').snapshots(),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
-            return Center(child: CircularProgressIndicator());
+            return const Center(child: CircularProgressIndicator());
           } else if (snapshot.hasError) {
             return Center(child: Text('Error: ${snapshot.error}'));
-          } else if (snapshot.hasData) {
+          } else if (snapshot.hasData && snapshot.data!.docs.isNotEmpty) {
+            final List<PropertyDto> propertyList =
+                snapshot.data!.docs.map((doc) {
+              final Map<String, dynamic> data =
+                  doc.data() as Map<String, dynamic>;
+              return PropertyDto.fromFirestore(data, doc.id);
+            }).toList();
             return ListView.builder(
-              itemCount: snapshot.data!.length,
+              itemCount: propertyList.length,
               itemBuilder: (context, index) {
-                return _buildPropertyCard(snapshot.data![index]);
+                return _buildPropertyCard(propertyList[index]);
               },
             );
           } else {
-            return Center(child: Text('No properties found.'));
+            return const Center(child: Text('No properties found.'));
           }
         },
       ),
@@ -74,81 +85,91 @@ class _PropertyListingState extends State<PropertyListing> {
   }
 
   Widget _buildPropertyCard(PropertyDto property) {
-    return Card(
-      margin: const EdgeInsets.all(8.0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: <Widget>[
-          CarouselSlider(
-            options: CarouselOptions(
-              aspectRatio: 16 / 9,
-              autoPlay: true,
-              autoPlayInterval: Duration(seconds: 3),
-              enlargeCenterPage: true,
-            ),
-            items: property.imageUrls.map((imageUrl) {
-              return Builder(
-                builder: (BuildContext context) {
-                  return Image.network(
-                    imageUrl,
-                    fit: BoxFit.cover,
-                  );
-                },
-              );
-            }).toList(),
+    return InkWell(
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => PropertyDetails(property: property),
           ),
-          Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: <Widget>[
-                Text(
-                  property.title,
-                  style: const TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 16.0,
+        );
+      },
+      child: Card(
+        margin: const EdgeInsets.all(8.0),
+        elevation: 0,
+        color: Colors.white,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: <Widget>[
+            Container(
+              height: 300,
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(
+                    color: Colors.black,
+                    width: 2), // Adding border to the image
+              ),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(16),
+                child: CarouselSlider(
+                  options: CarouselOptions(
+                    aspectRatio: 16 / 9,
+                    autoPlay: true,
+                    autoPlayInterval: const Duration(seconds: 3),
+                    enlargeCenterPage: true,
                   ),
+                  items: property.imageUrls.map((imageUrl) {
+                    return Builder(
+                      builder: (BuildContext context) {
+                        return Image.network(
+                          imageUrl,
+                          fit: BoxFit.cover,
+                        );
+                      },
+                    );
+                  }).toList(),
                 ),
-                const SizedBox(height: 8.0),
-                Text(
-                  property.subtitle,
-                  style: const TextStyle(
-                    fontSize: 14.0,
-                  ),
-                ),
-                const SizedBox(height: 8.0),
-                Text(
-                  'Date: ${property.date}',
-                  style: const TextStyle(
-                    fontSize: 12.0,
-                    color: Colors.grey,
-                  ),
-                ),
-                const SizedBox(height: 8.0),
-                Text(
-                  'Price: ${property.price}',
-                  style: const TextStyle(
-                    fontSize: 14.0,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ],
+              ),
             ),
-          ),
-        ],
+            Padding(
+              padding: const EdgeInsets.all(10.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: <Widget>[
+                  Text(
+                    property.landlord,
+                    style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16.0,
+                    ),
+                  ),
+                  Text(
+                    property.address,
+                    style: const TextStyle(
+                      fontSize: 14.0,
+                    ),
+                  ),
+                  Text(
+                    'Date: ${property.date}',
+                    style: const TextStyle(
+                      fontSize: 14.0,
+                      color: Colors.grey,
+                    ),
+                  ),
+                  Text(
+                    'PHP ${property.price}',
+                    style: const TextStyle(
+                      fontSize: 16.0,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(height: 12.0),
+                ],
+              ),
+            ),
+          ],
+        ),
       ),
     );
-  }
-
-  Future<List<PropertyDto>> getPropertyList() async {
-    final QuerySnapshot querySnapshot =
-        await FirebaseFirestore.instance.collection('Properties').get();
-    final List<PropertyDto> propertyList = [];
-    querySnapshot.docs.forEach((doc) {
-      final Map<String, dynamic> data = doc.data() as Map<String, dynamic>;
-      final PropertyDto property = PropertyDto.fromFirestore(data);
-      propertyList.add(property);
-    });
-    return propertyList;
   }
 }

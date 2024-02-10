@@ -13,7 +13,9 @@ class Login extends StatefulWidget {
   @override
   State<Login> createState() => _LoginState();
 }
+
 final storage = SecureStorage();
+
 class _LoginState extends State<Login> {
   FirebaseFirestore firestore = FirebaseFirestore.instance;
   final TextEditingController emailController = TextEditingController();
@@ -23,12 +25,15 @@ class _LoginState extends State<Login> {
   @override
   void initState() {
     super.initState();
-    _checkLoggedIn();
+    //_checkLoggedIn();
   }
 
   void _checkLoggedIn() async {
-    final email = await storage.getFromSecureStorage();
-    if (email != null || email!.isNotEmpty) {
+    final email = await storage.getFromSecureStorage("email");
+    print("Email is $email");
+    if (email == null || email.isEmpty) {
+      return;
+    } else {
       // Navigate to home if email is present in secure storage
       Navigator.pushReplacement(
           context, MaterialPageRoute(builder: (context) => const Home()));
@@ -176,8 +181,8 @@ class _LoginState extends State<Login> {
 
     if (querySnapshot.docs.isNotEmpty) {
       // User with provided email and password exists
-      storage.saveToSecureStorage(user.email);
-      
+      storage.saveToSecureStorage("email", user.email);
+
       Fluttertoast.showToast(msg: "Successfully Login");
       Navigator.pushReplacement(
         context,

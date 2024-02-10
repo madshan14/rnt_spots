@@ -6,19 +6,20 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:rnt_spots/dtos/users_dto.dart';
+import 'package:rnt_spots/dtos/property_dto.dart';
 import 'package:firebase_storage/firebase_storage.dart' as firebase_storage;
 import 'package:rnt_spots/shared/error_dialog.dart';
+import 'package:rnt_spots/widgets/property_listing/property_listing.dart';
 
-class AddProperty extends StatefulWidget {
-  final UserDto userInfo;
-  const AddProperty({super.key, required this.userInfo});
+class EditProperty extends StatefulWidget {
+  final PropertyDto? property;
+  const EditProperty({super.key, this.property});
 
   @override
-  State<AddProperty> createState() => _AddPropertyState();
+  State<EditProperty> createState() => _EditPropertyState();
 }
 
-class _AddPropertyState extends State<AddProperty> {
+class _EditPropertyState extends State<EditProperty> {
   final TextEditingController addressController = TextEditingController();
   final TextEditingController latitudeController = TextEditingController();
   final TextEditingController longitudeController = TextEditingController();
@@ -29,7 +30,45 @@ class _AddPropertyState extends State<AddProperty> {
 
   List<XFile> resultList = [];
   bool _isLoading = false;
-  String _selectedStatus = "Available";
+  String _selectedStatus = 'Available';
+  String _landlord = "";
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.property != null) {
+      populateFields();
+      populateCarouselWithImages();
+    }
+  }
+
+  void populateCarouselWithImages() {
+    if (widget.property != null) {
+      final PropertyDto property = widget.property!;
+      List<String> imageUrls = property.imageUrls;
+
+      // Iterate through imageUrls and load images into resultList
+      imageUrls.forEach((imageUrl) {
+        // Convert the imageUrl to XFile and add it to the resultList
+        XFile imageFile =
+            XFile(imageUrl); // Assuming you're using XFile for images
+        resultList.add(imageFile);
+      });
+
+      setState(() {});
+    }
+  }
+
+  void populateFields() {
+    final PropertyDto property = widget.property!;
+    addressController.text = property.address;
+    latitudeController.text = property.latitude.toString();
+    longitudeController.text = property.longitude.toString();
+    priceController.text = property.price.toString();
+    sizeController.text = property.size.toString();
+    _selectedStatus = property.status;
+    _landlord = property.landlord;
+  }
 
   InputDecoration _textFieldDecoration(String label) {
     return InputDecoration(
@@ -71,10 +110,19 @@ class _AddPropertyState extends State<AddProperty> {
       items: resultList.map((XFile image) {
         return Builder(
           builder: (BuildContext context) {
-            return Image.file(
-              File(image.path),
-              fit: BoxFit.cover,
-            );
+            if (image.path.startsWith('http')) {
+              // Display image from URL
+              return Image.network(
+                image.path,
+                fit: BoxFit.cover,
+              );
+            } else {
+              // Display image from local file
+              return Image.file(
+                File(image.path),
+                fit: BoxFit.cover,
+              );
+            }
           },
         );
       }).toList(),
@@ -84,6 +132,9 @@ class _AddPropertyState extends State<AddProperty> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      appBar: AppBar(
+        title: const Text("Edit Property"),
+      ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Form(
@@ -150,12 +201,16 @@ class _AddPropertyState extends State<AddProperty> {
                   }
                   return null;
                 },
-                items: ['Available', 'Not Available'].map((status) {
-                  return DropdownMenuItem<String>(
-                    value: status,
-                    child: Text(status),
-                  );
-                }).toList(),
+                items: [
+                  DropdownMenuItem<String>(
+                    value: 'Available',
+                    child: Text('Available'),
+                  ),
+                  DropdownMenuItem<String>(
+                    value: 'Not Available',
+                    child: Text('Not Available'),
+                  ),
+                ],
               ),
               const SizedBox(height: 10),
               TextFormField(
@@ -216,7 +271,7 @@ class _AddPropertyState extends State<AddProperty> {
                     : const Padding(
                         padding: EdgeInsets.all(8.0),
                         child: Text(
-                          'Add Property',
+                          'Edit Property',
                           style: TextStyle(fontSize: 20, color: Colors.white),
                         ),
                       ),
@@ -239,11 +294,11 @@ class _AddPropertyState extends State<AddProperty> {
   }
 
   void _submitForm() async {
-    final landlord = "${widget.userInfo.firstName} ${widget.userInfo.lastName}";
+    final landlord = _landlord;
+
     if (_formKey.currentState!.validate()) {
       if (resultList.isEmpty) {
         Fluttertoast.showToast(msg: "Please select at least one image");
-
         return;
       }
       setState(() {
@@ -260,29 +315,21 @@ class _AddPropertyState extends State<AddProperty> {
           'Latitude': double.tryParse(latitudeController.text) ?? 0.0,
           'Longitude': double.tryParse(longitudeController.text) ?? 0.0,
           'Status': _selectedStatus,
-          'Email': widget.userInfo.email,
+          'Email': widget.property!.email,
           'Price': double.tryParse(priceController.text) ?? 0.0,
           'Size': double.tryParse(sizeController.text) ?? 0.0,
           'Images': imageUrls,
           'Date': DateTime.now().toIso8601String(),
         };
 
-        // Add property data to Firestore
+        // Update property data in Firestore
         await FirebaseFirestore.instance
             .collection('Properties')
-            .add(propertyData);
-
-        Fluttertoast.showToast(msg: "Property added successfully");
-
-        // Clear form fields
-        addressController.clear();
-        latitudeController.clear();
-        longitudeController.clear();
-        priceController.clear();
-        sizeController.clear();
-
-        // Clear resultList
-        resultList.clear();
+            .doc(widget.property!.id)
+            .update(propertyData);
+        Fluttertoast.showToast(msg: "Property edited successfully");
+        Navigator.pushReplacement(context,
+            MaterialPageRoute(builder: (context) => const PropertyListing()));
       } catch (error) {
         ErrorDialog.showErrorDialog(context, "Property add error: $error");
       } finally {
@@ -298,22 +345,48 @@ class _AddPropertyState extends State<AddProperty> {
     final List<String> imageUrls = [];
 
     for (XFile imageFile in resultList) {
-      File file = File(imageFile.path);
+      if (imageFile.path.startsWith('http')) {
+        // If the image URL starts with 'http', it's already hosted on the web
+        // Add the existing URL directly to the imageUrls list
+        imageUrls.add(imageFile.path);
+      } else {
+        File file = File(imageFile.path);
 
-      // Generate a unique filename for the image
-      String fileName = DateTime.now().millisecondsSinceEpoch.toString();
+        // Generate a unique filename for the image
+        String fileName = DateTime.now().millisecondsSinceEpoch.toString();
 
-      // Upload the image to Firebase Storage
-      firebase_storage.Reference ref = firebase_storage.FirebaseStorage.instance
-          .ref()
-          .child('images/$fileName.jpg');
-      firebase_storage.UploadTask uploadTask = ref.putFile(file);
+        // Upload the image to Firebase Storage
+        firebase_storage.Reference ref = firebase_storage
+            .FirebaseStorage.instance
+            .ref()
+            .child('images/$fileName.jpg');
+        firebase_storage.UploadTask uploadTask = ref.putFile(file);
 
-      // Get download URL of the uploaded image
-      String imageUrl = await (await uploadTask).ref.getDownloadURL();
-      imageUrls.add(imageUrl);
+        // Get download URL of the uploaded image
+        String imageUrl = await (await uploadTask).ref.getDownloadURL();
+        imageUrls.add(imageUrl);
+      }
     }
 
     return imageUrls;
+  }
+
+  // Method to delete existing images from Firebase Storage
+  Future<void> _deleteExistingImages(List<String> imageUrls) async {
+    final List<Future<void>> deleteTasks = [];
+
+    for (String imageUrl in imageUrls) {
+      // Extract the image filename from the URL
+      final imageName = imageUrl.split('/').last.split('?').first;
+      final ref = firebase_storage.FirebaseStorage.instance
+          .ref()
+          .child('images/$imageName');
+
+      // Add delete task to the list
+      deleteTasks.add(ref.delete());
+    }
+
+    // Wait for all delete tasks to complete
+    await Future.wait(deleteTasks);
   }
 }

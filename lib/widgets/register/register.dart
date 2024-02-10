@@ -67,6 +67,7 @@ class _RegisterState extends State<Register> {
                         children: [
                           TextFormField(
                             controller: emailController,
+                            keyboardType: TextInputType.emailAddress,
                             decoration: const InputDecoration(
                                 labelText: 'Email',
                                 errorBorder: UnderlineInputBorder(

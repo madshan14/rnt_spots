@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:rnt_spots/dtos/users_dto.dart';
 import 'package:rnt_spots/shared/secure_storage.dart';
+import 'package:rnt_spots/widgets/account/account.dart';
 import 'package:rnt_spots/widgets/property_listing/property_listing.dart';
 
 class Home extends StatefulWidget {
@@ -17,7 +18,7 @@ class _HomeState extends State<Home> {
   final List<Widget> _screens = [
     const PropertyListing(),
     const PlaceholderWidget(text: 'Screen 2'),
-    const PlaceholderWidget(text: 'Screen 3'),
+    const Account(),
   ];
 
   void _onItemTapped(int index) {
@@ -55,7 +56,7 @@ class _HomeState extends State<Home> {
 
 Future<UserDto?> getUserInfo() async {
   final storage = SecureStorage();
-  final email = await storage.getFromSecureStorage();
+  final email = await storage.getFromSecureStorage("email");
   final userQuery = await FirebaseFirestore.instance
       .collection('Users')
       .where('email', isEqualTo: email)
@@ -71,13 +72,18 @@ Future<UserDto?> getUserInfo() async {
   final lastName = userData['lastName'];
   final role = userData['role'];
   final balance = userData['balance'];
+  final id = userQuery.docs.first.id;
+
+  
+  await storage.saveToSecureStorage('userRole', role);
 
   return UserDto(
       email: email ?? "",
       firstName: firstName,
       lastName: lastName,
       role: role,
-      balance: balance);
+      balance: balance,
+      id: id);
 }
 
 class PlaceholderWidget extends StatelessWidget {

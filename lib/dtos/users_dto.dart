@@ -3,6 +3,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 class UserDto {
+  final String? id;
   final String email;
   final String firstName;
   final String lastName;
@@ -16,6 +17,7 @@ class UserDto {
       required this.firstName,
       required this.lastName,
       this.password,
+      this.id,
       required this.role,
       double? balance,
       DateTime? createdAt})
