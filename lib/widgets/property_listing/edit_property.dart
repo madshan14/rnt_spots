@@ -48,12 +48,12 @@ class _EditPropertyState extends State<EditProperty> {
       List<String> imageUrls = property.imageUrls;
 
       // Iterate through imageUrls and load images into resultList
-      imageUrls.forEach((imageUrl) {
+      for (var imageUrl in imageUrls) {
         // Convert the imageUrl to XFile and add it to the resultList
         XFile imageFile =
             XFile(imageUrl); // Assuming you're using XFile for images
         resultList.add(imageFile);
-      });
+      }
 
       setState(() {});
     }
@@ -201,7 +201,7 @@ class _EditPropertyState extends State<EditProperty> {
                   }
                   return null;
                 },
-                items: [
+                items: const [
                   DropdownMenuItem<String>(
                     value: 'Available',
                     child: Text('Available'),

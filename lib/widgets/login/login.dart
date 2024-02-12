@@ -25,18 +25,18 @@ class _LoginState extends State<Login> {
   @override
   void initState() {
     super.initState();
-    //_checkLoggedIn();
+    _checkLoggedIn();
   }
 
   void _checkLoggedIn() async {
     final email = await storage.getFromSecureStorage("email");
     print("Email is $email");
-    if (email == null || email.isEmpty) {
-      return;
-    } else {
+    if (email != "null") {
       // Navigate to home if email is present in secure storage
       Navigator.pushReplacement(
-          context, MaterialPageRoute(builder: (context) => const Home()));
+        context,
+        MaterialPageRoute(builder: (context) => const Home()),
+      );
     }
   }
 

@@ -1,3 +1,5 @@
+import 'package:intl/intl.dart';
+
 class PropertyDto {
   final List<String> imageUrls;
   final String landlord;
@@ -39,12 +41,17 @@ class PropertyDto {
     String size = data['Size']?.toString() ?? '';
     double latitude = data['Latitude'];
     double longitude = data['Longitude'];
+ // Parse the date string to DateTime
+    DateTime parsedDate = DateTime.tryParse(date) ?? DateTime.now();
+    
+    // Format the date as "February 14, 1999"
+    String formattedDate = DateFormat('MMMM dd, yyyy').format(parsedDate);
 
     return PropertyDto(
       imageUrls: imageUrls,
       landlord: landlord,
       address: address,
-      date: date,
+      date: formattedDate,
       price: price,
       size: size,
       email: email,

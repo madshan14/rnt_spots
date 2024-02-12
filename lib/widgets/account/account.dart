@@ -26,7 +26,7 @@ class _AccountState extends State<Account> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(
+        title: const Text(
           'User Information',
           style: TextStyle(
             fontSize: 24,
@@ -43,17 +43,17 @@ class _AccountState extends State<Account> {
               future: userInfoFuture,
               builder: (context, snapshot) {
                 if (snapshot.connectionState == ConnectionState.waiting) {
-                  return CircularProgressIndicator();
+                  return const Center(child: CircularProgressIndicator());
                 } else if (snapshot.hasError) {
                   return Text('Error: ${snapshot.error}');
                 } else if (snapshot.hasData) {
                   return _buildUserInfo(snapshot.data!);
                 } else {
-                  return Text('No user data found.');
+                  return const Text('No user data found.');
                 }
               },
             ),
-            SizedBox(height: 40),
+            const SizedBox(height: 40),
             _buildLogoutButton(),
           ],
         ),
@@ -66,50 +66,70 @@ class _AccountState extends State<Account> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Username: ${user.firstName} ${user.lastName}',
-          style: TextStyle(fontSize: 18),
+          'First Name: ${user.firstName}',
+          style: const TextStyle(fontSize: 18),
         ),
-        SizedBox(height: 10),
+        const SizedBox(height: 10),
+        Text(
+          'Last Name: ${user.lastName}',
+          style: const TextStyle(fontSize: 18),
+        ),
+        const SizedBox(height: 10),
         Text(
           'Email: ${user.email}',
-          style: TextStyle(fontSize: 18),
+          style: const TextStyle(fontSize: 18),
         ),
-        SizedBox(height: 10),
+        const SizedBox(height: 10),
         Text(
           'Role: ${user.role}',
-          style: TextStyle(fontSize: 18),
+          style: const TextStyle(fontSize: 18),
         ),
-        SizedBox(height: 10),
+        const SizedBox(height: 10),
         Text(
           'Balance: PHP ${user.balance}',
-          style: TextStyle(fontSize: 18),
+          style: const TextStyle(fontSize: 18),
         ),
-        SizedBox(height: 10),
+        const SizedBox(height: 10),
         Text(
           'Created At: ${user.createdAt}',
-          style: TextStyle(fontSize: 18),
+          style: const TextStyle(fontSize: 18),
         ),
-        SizedBox(height: 20),
+        const SizedBox(height: 20),
         ElevatedButton(
           onPressed: () {
             _editRole(user);
           },
-          child: Text('Edit Role'),
+          style: ElevatedButton.styleFrom(
+            backgroundColor: Colors.grey,
+          ),
+          child: const Padding(
+            padding: EdgeInsets.all(8.0),
+            child: Text(
+              'Switch Role',
+              style: TextStyle(fontSize: 18, color: Colors.white),
+            ),
+          ),
         ),
       ],
     );
   }
 
   Widget _buildLogoutButton() {
-    return ElevatedButton(
-      onPressed: () {
-        _logout();
-      },
-      child: Padding(
-        padding: EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-        child: Text(
-          'Logout',
-          style: TextStyle(fontSize: 18),
+    return SizedBox(
+      width: double.infinity,
+      child: ElevatedButton(
+        onPressed: () {
+          _logout();
+        },
+        style: ElevatedButton.styleFrom(
+          backgroundColor: Colors.redAccent,
+        ),
+        child: const Padding(
+          padding: EdgeInsets.symmetric(vertical: 10),
+          child: Text(
+            'Logout',
+            style: TextStyle(fontSize: 18, color: Colors.white),
+          ),
         ),
       ),
     );
@@ -124,21 +144,23 @@ class _AccountState extends State<Account> {
   }
 
   void _editRole(UserDto user) async {
+    final List<String> roles = ['Tenant', 'Landlord'];
     // Update user role in Firestore
     try {
       final userRef =
           FirebaseFirestore.instance.collection('Users').doc(user.id);
-      await userRef.update({'role': 'Tenant'});
+      await userRef.update(
+          {'role': roles.where((element) => element != user.role).first});
       setState(() {
         // Reload user information after updating role
         userInfoFuture = getUserInfo();
       });
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('User role updated successfully')),
+        const SnackBar(content: Text('User role updated successfully')),
       );
     } catch (error) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Failed to update user role')),
+        const SnackBar(content: Text('Failed to update user role')),
       );
     }
   }

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:carousel_slider/carousel_slider.dart';
 import 'package:rnt_spots/dtos/property_dto.dart';
 import 'package:rnt_spots/shared/secure_storage.dart';
+import 'package:rnt_spots/widgets/goolgle_map/google_map_view.dart';
 import 'package:rnt_spots/widgets/property_listing/edit_property.dart';
 
 class PropertyDetails extends StatefulWidget {
@@ -61,14 +62,14 @@ class _PropertyDetailsState extends State<PropertyDetails> {
               },
               backgroundColor: Colors.redAccent,
               foregroundColor: Colors.white,
-              child: Icon(Icons.edit),
+              child: const Icon(Icons.edit),
             )
           : null,
     );
   }
 
   Widget _buildImageSlider() {
-    return Container(
+    return SizedBox(
       height: 300,
       child: ClipRRect(
         borderRadius: BorderRadius.circular(16),
@@ -102,7 +103,7 @@ class _PropertyDetailsState extends State<PropertyDetails> {
         children: [
           Text(
             'Landlord: ${widget.property.landlord}',
-            style: TextStyle(
+            style: const TextStyle(
               fontWeight: FontWeight.bold,
               fontSize: 16.0,
             ),
@@ -110,7 +111,7 @@ class _PropertyDetailsState extends State<PropertyDetails> {
           const SizedBox(height: 8.0),
           Text(
             'Email: ${widget.property.email}',
-            style: TextStyle(
+            style: const TextStyle(
               fontWeight: FontWeight.bold,
               fontSize: 16.0,
             ),
@@ -118,7 +119,7 @@ class _PropertyDetailsState extends State<PropertyDetails> {
           const SizedBox(height: 8.0),
           Text(
             'Size: ${widget.property.size}',
-            style: TextStyle(
+            style: const TextStyle(
               fontWeight: FontWeight.bold,
               fontSize: 16.0,
             ),
@@ -126,7 +127,7 @@ class _PropertyDetailsState extends State<PropertyDetails> {
           const SizedBox(height: 8.0),
           Text(
             'Status: ${widget.property.status}',
-            style: TextStyle(
+            style: const TextStyle(
               fontWeight: FontWeight.bold,
               fontSize: 16.0,
             ),
@@ -134,7 +135,7 @@ class _PropertyDetailsState extends State<PropertyDetails> {
           const SizedBox(height: 8.0),
           Text(
             'Address: ${widget.property.address}',
-            style: TextStyle(
+            style: const TextStyle(
               fontWeight: FontWeight.bold,
               fontSize: 16.0,
             ),
@@ -142,7 +143,7 @@ class _PropertyDetailsState extends State<PropertyDetails> {
           const SizedBox(height: 8.0),
           Text(
             'Date: ${widget.property.date}',
-            style: TextStyle(
+            style: const TextStyle(
               fontWeight: FontWeight.bold,
               fontSize: 16.0,
             ),
@@ -150,7 +151,7 @@ class _PropertyDetailsState extends State<PropertyDetails> {
           const SizedBox(height: 8.0),
           Text(
             'Price: PHP ${widget.property.price}',
-            style: TextStyle(
+            style: const TextStyle(
               fontSize: 16.0,
               fontWeight: FontWeight.bold,
             ),
@@ -169,7 +170,7 @@ class _PropertyDetailsState extends State<PropertyDetails> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
+          const Text(
             'Reviews',
             style: TextStyle(
               fontWeight: FontWeight.bold,
@@ -179,8 +180,8 @@ class _PropertyDetailsState extends State<PropertyDetails> {
           const SizedBox(height: 8.0),
           Row(
             children: ratings.map((rating) {
-              return Padding(
-                padding: const EdgeInsets.only(right: 8.0),
+              return const Padding(
+                padding: EdgeInsets.only(right: 8.0),
                 child: Icon(
                   Icons.star,
                   color: Colors.amber,
@@ -201,7 +202,16 @@ class _PropertyDetailsState extends State<PropertyDetails> {
       padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
       child: ElevatedButton(
         onPressed: () {
-          // Navigate to map
+          Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => GoogleMapView(
+              latitude: widget.property.latitude,
+              longitude: widget.property.longitude,
+              label: widget.property.landlord,
+            ),
+          ),
+        );
         },
         style: ElevatedButton.styleFrom(
           backgroundColor: Colors.redAccent,

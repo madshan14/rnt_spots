@@ -150,10 +150,9 @@ class _PropertyListingState extends State<PropertyListing> {
                     ),
                   ),
                   Text(
-                    'Date: ${property.date}',
+                    property.date,
                     style: const TextStyle(
                       fontSize: 14.0,
-                      color: Colors.grey,
                     ),
                   ),
                   Text(
