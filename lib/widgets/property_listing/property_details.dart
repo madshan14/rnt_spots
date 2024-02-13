@@ -1,5 +1,7 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:carousel_slider/carousel_slider.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 import 'package:rnt_spots/dtos/property_dto.dart';
 import 'package:rnt_spots/shared/secure_storage.dart';
 import 'package:rnt_spots/widgets/goolgle_map/google_map_view.dart';
@@ -8,7 +10,7 @@ import 'package:rnt_spots/widgets/property_listing/edit_property.dart';
 class PropertyDetails extends StatefulWidget {
   final PropertyDto property;
 
-  const PropertyDetails({super.key, required this.property});
+  const PropertyDetails({Key? key, required this.property}) : super(key: key);
 
   @override
   State<PropertyDetails> createState() => _PropertyDetailsState();
@@ -18,6 +20,8 @@ final storage = SecureStorage();
 
 class _PropertyDetailsState extends State<PropertyDetails> {
   bool isLandlord = false;
+  bool isAdmin = false;
+
   @override
   void initState() {
     super.initState();
@@ -28,47 +32,68 @@ class _PropertyDetailsState extends State<PropertyDetails> {
     final userRole = await storage.getFromSecureStorage("userRole");
     setState(() {
       isLandlord = userRole == "Landlord";
+      isAdmin = userRole == "Admin";
     });
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Property Details'),
-      ),
-      body: SingleChildScrollView(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            _buildImageSlider(),
-            _buildDetails(),
-            _buildViewOnMapButton(),
-            _buildReviewSection(),
-          ],
-        ),
-      ),
-      floatingActionButton: isLandlord
-          ? FloatingActionButton(
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => EditProperty(
-                      property: widget.property,
-                    ),
-                  ),
-                );
-              },
-              backgroundColor: Colors.redAccent,
-              foregroundColor: Colors.white,
-              child: const Icon(Icons.edit),
-            )
-          : null,
+    return StreamBuilder<DocumentSnapshot>(
+      stream: FirebaseFirestore.instance
+          .collection('Properties')
+          .doc(widget.property.id)
+          .snapshots(),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const CircularProgressIndicator();
+        } else if (snapshot.hasError) {
+          return Text('Error: ${snapshot.error}');
+        } else if (snapshot.hasData && snapshot.data!.exists) {
+          final property = PropertyDto.fromFirestore(
+            snapshot.data!.data() as Map<String, dynamic>,
+            snapshot.data!.id,
+          );
+          return Scaffold(
+            appBar: AppBar(
+              title: const Text('Property Details'),
+            ),
+            body: SingleChildScrollView(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  _buildImageSlider(property),
+                  _buildDetails(property),
+                  _buildViewOnMapButton(property),
+                  _buildReviewSection(property),
+                ],
+              ),
+            ),
+            floatingActionButton: isLandlord
+                ? FloatingActionButton(
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => EditProperty(
+                            property: property,
+                          ),
+                        ),
+                      );
+                    },
+                    backgroundColor: Colors.redAccent,
+                    foregroundColor: Colors.white,
+                    child: const Icon(Icons.edit),
+                  )
+                : null,
+          );
+        } else {
+          return Text('Property not found');
+        }
+      },
     );
   }
 
-  Widget _buildImageSlider() {
+  Widget _buildImageSlider(PropertyDto property) {
     return SizedBox(
       height: 300,
       child: ClipRRect(
@@ -80,7 +105,7 @@ class _PropertyDetailsState extends State<PropertyDetails> {
             autoPlayInterval: const Duration(seconds: 3),
             enlargeCenterPage: true,
           ),
-          items: widget.property.imageUrls.map((imageUrl) {
+          items: property.imageUrls.map((imageUrl) {
             return Builder(
               builder: (BuildContext context) {
                 return Image.network(
@@ -95,14 +120,36 @@ class _PropertyDetailsState extends State<PropertyDetails> {
     );
   }
 
-  Widget _buildDetails() {
+  Widget _buildDetails(PropertyDto property) {
     return Padding(
       padding: const EdgeInsets.all(16.0),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          Row(
+            children: [
+              Text(
+                'Landlord: ${property.landlord}',
+                style: const TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 16.0,
+                ),
+              ),
+              if (property.verified)
+                Icon(
+                  Icons.check_circle,
+                  color: Colors.green,
+                ),
+              if (!property.verified)
+                Icon(
+                  Icons.warning,
+                  color: Colors.red,
+                ),
+            ],
+          ),
+          const SizedBox(height: 8.0),
           Text(
-            'Landlord: ${widget.property.landlord}',
+            'Email: ${property.email}',
             style: const TextStyle(
               fontWeight: FontWeight.bold,
               fontSize: 16.0,
@@ -110,7 +157,7 @@ class _PropertyDetailsState extends State<PropertyDetails> {
           ),
           const SizedBox(height: 8.0),
           Text(
-            'Email: ${widget.property.email}',
+            'Size: ${property.size}',
             style: const TextStyle(
               fontWeight: FontWeight.bold,
               fontSize: 16.0,
@@ -118,7 +165,7 @@ class _PropertyDetailsState extends State<PropertyDetails> {
           ),
           const SizedBox(height: 8.0),
           Text(
-            'Size: ${widget.property.size}',
+            'Status: ${property.status}',
             style: const TextStyle(
               fontWeight: FontWeight.bold,
               fontSize: 16.0,
@@ -126,7 +173,7 @@ class _PropertyDetailsState extends State<PropertyDetails> {
           ),
           const SizedBox(height: 8.0),
           Text(
-            'Status: ${widget.property.status}',
+            'Address: ${property.address}',
             style: const TextStyle(
               fontWeight: FontWeight.bold,
               fontSize: 16.0,
@@ -134,7 +181,7 @@ class _PropertyDetailsState extends State<PropertyDetails> {
           ),
           const SizedBox(height: 8.0),
           Text(
-            'Address: ${widget.property.address}',
+            'Date: ${property.date}',
             style: const TextStyle(
               fontWeight: FontWeight.bold,
               fontSize: 16.0,
@@ -142,15 +189,7 @@ class _PropertyDetailsState extends State<PropertyDetails> {
           ),
           const SizedBox(height: 8.0),
           Text(
-            'Date: ${widget.property.date}',
-            style: const TextStyle(
-              fontWeight: FontWeight.bold,
-              fontSize: 16.0,
-            ),
-          ),
-          const SizedBox(height: 8.0),
-          Text(
-            'Price: PHP ${widget.property.price}',
+            'Price: PHP ${property.price}',
             style: const TextStyle(
               fontSize: 16.0,
               fontWeight: FontWeight.bold,
@@ -161,7 +200,7 @@ class _PropertyDetailsState extends State<PropertyDetails> {
     );
   }
 
-  Widget _buildReviewSection() {
+  Widget _buildReviewSection(PropertyDto property) {
     // Dummy ratings data
     final List<int> ratings = [5, 4, 3, 5, 2];
 
@@ -170,26 +209,52 @@ class _PropertyDetailsState extends State<PropertyDetails> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
-            'Reviews',
-            style: TextStyle(
-              fontWeight: FontWeight.bold,
-              fontSize: 18.0,
-            ),
-          ),
-          const SizedBox(height: 8.0),
-          Row(
-            children: ratings.map((rating) {
-              return const Padding(
-                padding: EdgeInsets.only(right: 8.0),
-                child: Icon(
-                  Icons.star,
-                  color: Colors.amber,
-                  size: 24.0,
+          if (isAdmin && !property.verified)
+            Center(
+              child: ElevatedButton(
+                onPressed: () async {
+                  // Update property verification
+                  await FirebaseFirestore.instance
+                      .collection('Properties')
+                      .doc(property.id)
+                      .update({"Verified": true});
+
+                  Fluttertoast.showToast(msg: "Property Verified");
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.green,
                 ),
-              );
-            }).toList(),
-          ),
+                child: const Padding(
+                  padding: EdgeInsets.all(8.0),
+                  child: Text(
+                    'Verify Listing',
+                    style: TextStyle(fontSize: 20, color: Colors.white),
+                  ),
+                ),
+              ),
+            ),
+          if (!isAdmin)
+            const Text(
+              'Reviews',
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+                fontSize: 18.0,
+              ),
+            ),
+          const SizedBox(height: 8.0),
+          if (!isAdmin)
+            Row(
+              children: ratings.map((rating) {
+                return const Padding(
+                  padding: EdgeInsets.only(right: 8.0),
+                  child: Icon(
+                    Icons.star,
+                    color: Colors.amber,
+                    size: 24.0,
+                  ),
+                );
+              }).toList(),
+            ),
           const SizedBox(height: 8.0),
           // Add reviews here
         ],
@@ -197,32 +262,32 @@ class _PropertyDetailsState extends State<PropertyDetails> {
     );
   }
 
-  Widget _buildViewOnMapButton() {
+  Widget _buildViewOnMapButton(PropertyDto property) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
       child: ElevatedButton(
         onPressed: () {
           Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => GoogleMapView(
-              latitude: widget.property.latitude,
-              longitude: widget.property.longitude,
-              label: widget.property.landlord,
+            context,
+            MaterialPageRoute(
+              builder: (context) => GoogleMapView(
+                latitude: property.latitude,
+                longitude: property.longitude,
+                label: property.landlord,
+              ),
             ),
-          ),
-        );
+          );
         },
         style: ElevatedButton.styleFrom(
           backgroundColor: Colors.redAccent,
         ),
-         child: const Padding(
-                      padding: EdgeInsets.all(8.0),
-                      child: Text(
-                        'View on Map',
-                        style: TextStyle(fontSize: 20, color: Colors.white),
-                      ),
-                    ),
+        child: const Padding(
+          padding: EdgeInsets.all(8.0),
+          child: Text(
+            'View on Map',
+            style: TextStyle(fontSize: 20, color: Colors.white),
+          ),
+        ),
       ),
     );
   }

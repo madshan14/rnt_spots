@@ -44,10 +44,28 @@ class _PropertyListingState extends State<PropertyListing> {
                   doc.data() as Map<String, dynamic>;
               return PropertyDto.fromFirestore(data, doc.id);
             }).toList();
-            return ListView.builder(
-              itemCount: propertyList.length,
-              itemBuilder: (context, index) {
-                return _buildPropertyCard(propertyList[index]);
+
+            // Filter the property list based on user role
+            return FutureBuilder<UserDto?>(
+              future: userInfoFuture,
+              builder: (context, userSnapshot) {
+                if (userSnapshot.connectionState == ConnectionState.waiting) {
+                  return const Center(child: CircularProgressIndicator());
+                } else if (userSnapshot.hasError) {
+                  return Center(child: Text('Error: ${userSnapshot.error}'));
+                } else {
+                  final isAdmin = userSnapshot.data?.role == 'Admin';
+                  return ListView.builder(
+                    itemCount: propertyList.length,
+                    itemBuilder: (context, index) {
+                      final property = propertyList[index];
+                      final isVerified = property.verified;
+                      return (isVerified || isAdmin)
+                          ? _buildPropertyCard(property)
+                          : const SizedBox.shrink();
+                    },
+                  );
+                }
               },
             );
           } else {
@@ -109,27 +127,39 @@ class _PropertyListingState extends State<PropertyListing> {
                     color: Colors.black,
                     width: 2), // Adding border to the image
               ),
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(16),
-                child: CarouselSlider(
-                  options: CarouselOptions(
-                    aspectRatio: 16 / 9,
-                    autoPlay: true,
-                    autoPlayInterval: const Duration(seconds: 3),
-                    enlargeCenterPage: true,
+              child: Stack(children: [
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(16),
+                  child: CarouselSlider(
+                    options: CarouselOptions(
+                      aspectRatio: 16/12,
+                      autoPlay: true,
+                      autoPlayInterval: const Duration(seconds: 3),
+                      enlargeCenterPage: true,
+                    ),
+                    items: property.imageUrls.map((imageUrl) {
+                      return Builder(
+                        builder: (BuildContext context) {
+                          return Image.network(
+                            imageUrl,
+                            fit: BoxFit.fill,
+                          );
+                        },
+                      );
+                    }).toList(),
                   ),
-                  items: property.imageUrls.map((imageUrl) {
-                    return Builder(
-                      builder: (BuildContext context) {
-                        return Image.network(
-                          imageUrl,
-                          fit: BoxFit.cover,
-                        );
-                      },
-                    );
-                  }).toList(),
                 ),
-              ),
+                if (property.verified)
+                  Positioned(
+                    top: 10,
+                    right: 10,
+                    child: Icon(
+                      Icons.verified,
+                      color: Colors.green,
+                      size: 30,
+                    ),
+                  ),
+              ]),
             ),
             Padding(
               padding: const EdgeInsets.all(10.0),

@@ -10,6 +10,7 @@ class PropertyDto {
   final String size;
   final double latitude;
   final double longitude;
+  final bool verified;
   final String status;
   final String id;
 
@@ -23,6 +24,7 @@ class PropertyDto {
     required this.email,
     required this.latitude,
     required this.longitude,
+    required this.verified,
     required this.status,
     required this.id,
   });
@@ -39,6 +41,7 @@ class PropertyDto {
     String email = data['Email']?.toString() ?? '';
     String status = data['Status']?.toString() ?? '';
     String size = data['Size']?.toString() ?? '';
+    bool verified = data['Verified'];
     double latitude = data['Latitude'];
     double longitude = data['Longitude'];
  // Parse the date string to DateTime
@@ -57,6 +60,7 @@ class PropertyDto {
       email: email,
       latitude: latitude,
       longitude: longitude,
+      verified: verified,
       status: status,
       id: docId
     );

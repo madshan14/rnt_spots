@@ -265,6 +265,7 @@ class _AddPropertyState extends State<AddProperty> {
           'Size': double.tryParse(sizeController.text) ?? 0.0,
           'Images': imageUrls,
           'Date': DateTime.now().toIso8601String(),
+          'Verified': false
         };
 
         // Add property data to Firestore

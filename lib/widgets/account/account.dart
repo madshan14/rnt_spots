@@ -85,31 +85,28 @@ class _AccountState extends State<Account> {
           style: const TextStyle(fontSize: 18),
         ),
         const SizedBox(height: 10),
-        Text(
-          'Balance: PHP ${user.balance}',
-          style: const TextStyle(fontSize: 18),
-        ),
-        const SizedBox(height: 10),
-        Text(
-          'Created At: ${user.createdAt}',
-          style: const TextStyle(fontSize: 18),
-        ),
-        const SizedBox(height: 20),
-        ElevatedButton(
-          onPressed: () {
-            _editRole(user);
-          },
-          style: ElevatedButton.styleFrom(
-            backgroundColor: Colors.grey,
+        if (user.role != 'Admin')
+          Text(
+            'Balance: PHP ${user.balance}',
+            style: const TextStyle(fontSize: 18),
           ),
-          child: const Padding(
-            padding: EdgeInsets.all(8.0),
-            child: Text(
-              'Switch Role',
-              style: TextStyle(fontSize: 18, color: Colors.white),
+        if (user.role != 'Admin') const SizedBox(height: 10),
+        if (user.role != "Admin")
+          ElevatedButton(
+            onPressed: () {
+              _editRole(user);
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.grey,
+            ),
+            child: const Padding(
+              padding: EdgeInsets.all(8.0),
+              child: Text(
+                'Switch Role',
+                style: TextStyle(fontSize: 18, color: Colors.white),
+              ),
             ),
           ),
-        ),
       ],
     );
   }
