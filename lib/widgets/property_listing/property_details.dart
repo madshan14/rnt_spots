@@ -288,13 +288,13 @@ class _PropertyDetailsState extends State<PropertyDetails> {
                 .snapshots(),
             builder: (context, snapshot) {
               if (snapshot.connectionState == ConnectionState.waiting) {
-                return CircularProgressIndicator();
+                return const CircularProgressIndicator();
               }
               if (snapshot.hasError) {
                 return Text('Error: ${snapshot.error}');
               }
               if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
-                return Text('No reviews yet');
+                return const Text('No reviews yet');
               }
               final List<double> ratings = snapshot.data!.docs
                   .map((doc) => doc['rating'] as double)
@@ -311,18 +311,18 @@ class _PropertyDetailsState extends State<PropertyDetails> {
                     direction: Axis.horizontal,
                     allowHalfRating: true,
                     itemCount: 5,
-                    itemPadding: EdgeInsets.symmetric(horizontal: 4.0),
-                    itemBuilder: (context, _) => Icon(
+                    itemPadding: const EdgeInsets.symmetric(horizontal: 4.0),
+                    itemBuilder: (context, _) => const Icon(
                       Icons.star,
                       color: Colors.amber,
                     ),
                     onRatingUpdate: (rating) {
-                      print(rating);
+                      //print(rating);
                     },
                   ),
-                  SizedBox(height: 8.0),
-                  Divider(),
-                  SizedBox(height: 8.0),
+                  const SizedBox(height: 8.0),
+                  const Divider(),
+                  const SizedBox(height: 8.0),
                   // Display individual reviews
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -340,18 +340,18 @@ class _PropertyDetailsState extends State<PropertyDetails> {
                             children: [
                               Text(
                                 'Rating: $rating',
-                                style: TextStyle(fontWeight: FontWeight.bold),
+                                style: const TextStyle(fontWeight: FontWeight.bold),
                               ),
-                              SizedBox(width: 8.0),
+                              const SizedBox(width: 8.0),
                               Text(
                                 formattedDate,
-                                style: TextStyle(fontStyle: FontStyle.italic),
+                                style: const TextStyle(fontStyle: FontStyle.italic),
                               ),
                             ],
                           ),
-                          SizedBox(height: 4.0),
+                          const SizedBox(height: 4.0),
                           Text(comment),
-                          Divider(),
+                          const Divider(),
                         ],
                       );
                     }).toList(),

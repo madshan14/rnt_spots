@@ -79,7 +79,7 @@ Future<UserDto?> getUserInfo() async {
   await storage.saveToSecureStorage('userRole', role);
 
   return UserDto(
-      email: email ?? "",
+      email: email,
       firstName: firstName,
       lastName: lastName,
       role: role,
