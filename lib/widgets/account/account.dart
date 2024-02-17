@@ -1,3 +1,5 @@
+// ignore_for_file: use_build_context_synchronously
+
 import 'package:flutter/material.dart';
 import 'package:rnt_spots/dtos/users_dto.dart';
 import 'package:rnt_spots/shared/secure_storage.dart';
@@ -152,6 +154,7 @@ class _AccountState extends State<Account> {
         // Reload user information after updating role
         userInfoFuture = getUserInfo();
       });
+      
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('User role updated successfully')),
       );

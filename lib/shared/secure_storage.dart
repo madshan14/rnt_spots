@@ -7,7 +7,7 @@ class SecureStorage {
     await _storage.write(key: key, value: email);
   }
 
-  Future<String?> getFromSecureStorage(String key) async {
+  Future<String> getFromSecureStorage(String key) async {
     const storage = FlutterSecureStorage();
     final email = await storage.read(key: key);
     return email.toString();

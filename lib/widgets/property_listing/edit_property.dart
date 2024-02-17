@@ -1,3 +1,5 @@
+// ignore_for_file: use_build_context_synchronously
+
 import 'dart:async';
 import 'dart:io';
 
@@ -30,8 +32,18 @@ class _EditPropertyState extends State<EditProperty> {
 
   List<XFile> resultList = [];
   bool _isLoading = false;
-  String _selectedStatus = 'Available';
   String _landlord = "";
+  String _selectedStatus = 'Available';
+  String _selectedBarangay = "Baliwasan";
+
+  final List<String> baragays = [
+    'Baliwasan',
+    'Tetuan',
+    'San Jose',
+    'Sta Catalina',
+    'Mampang',
+    'Talon-Talon'
+  ];
 
   @override
   void initState() {
@@ -67,6 +79,7 @@ class _EditPropertyState extends State<EditProperty> {
     priceController.text = property.price.toString();
     sizeController.text = property.size.toString();
     _selectedStatus = property.status;
+    _selectedBarangay = property.barangay;
     _landlord = property.landlord;
   }
 
@@ -142,6 +155,28 @@ class _EditPropertyState extends State<EditProperty> {
           child: ListView(
             children: [
               _buildCarousel(),
+              const SizedBox(height: 20),
+              DropdownButtonFormField<String>(
+                value: _selectedBarangay,
+                onChanged: (newValue) {
+                  setState(() {
+                    _selectedBarangay = newValue!;
+                  });
+                },
+                decoration: _textFieldDecoration('Barangay'),
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return 'Please select a Barangay';
+                  }
+                  return null;
+                },
+                items: baragays.map((baragay) {
+                  return DropdownMenuItem<String>(
+                    value: baragay,
+                    child: Text(baragay),
+                  );
+                }).toList(),
+              ),
               const SizedBox(height: 20),
               TextFormField(
                 controller: addressController,
@@ -315,6 +350,7 @@ class _EditPropertyState extends State<EditProperty> {
           'Latitude': double.tryParse(latitudeController.text) ?? 0.0,
           'Longitude': double.tryParse(longitudeController.text) ?? 0.0,
           'Status': _selectedStatus,
+          'Barangay': _selectedBarangay,
           'Email': widget.property!.email,
           'Price': double.tryParse(priceController.text) ?? 0.0,
           'Size': double.tryParse(sizeController.text) ?? 0.0,

@@ -13,11 +13,10 @@ class GoogleMapView extends StatefulWidget {
   final String label;
 
   const GoogleMapView(
-      {Key? key,
+      {super.key,
       required this.latitude,
       required this.longitude,
-      required this.label})
-      : super(key: key);
+      required this.label});
 
   @override
   State<GoogleMapView> createState() => _GoogleMapViewState();
@@ -171,7 +170,7 @@ class _GoogleMapViewState extends State<GoogleMapView> {
       return polylines;
     }
 
-    final String apiKey = 'AIzaSyAvsq3zk5Ww3SM1rDBPkM7960fXGkaUOcA';
+    const String apiKey = 'AIzaSyAvsq3zk5Ww3SM1rDBPkM7960fXGkaUOcA';
 
     final String origin =
         '${currentLocation!.latitude},${currentLocation!.longitude}';

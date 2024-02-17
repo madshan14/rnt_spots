@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:rnt_spots/dtos/users_dto.dart';
 import 'package:rnt_spots/shared/secure_storage.dart';
 import 'package:rnt_spots/widgets/account/account.dart';
+import 'package:rnt_spots/widgets/inbox/inbox.dart';
 import 'package:rnt_spots/widgets/property_listing/property_listing.dart';
 
 class Home extends StatefulWidget {
@@ -17,7 +18,7 @@ class _HomeState extends State<Home> {
 
   final List<Widget> _screens = [
     const PropertyListing(),
-    const PlaceholderWidget(text: 'Screen 2'),
+    const Inbox(),
     const Account(),
   ];
 

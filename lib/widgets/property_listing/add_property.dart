@@ -1,3 +1,5 @@
+// ignore_for_file: use_build_context_synchronously
+
 import 'dart:async';
 import 'dart:io';
 
@@ -30,6 +32,16 @@ class _AddPropertyState extends State<AddProperty> {
   List<XFile> resultList = [];
   bool _isLoading = false;
   String _selectedStatus = "Available";
+  String _selectedBarangay = "Baliwasan";
+
+  final List<String> baragays = [
+    'Baliwasan',
+    'Tetuan',
+    'San Jose',
+    'Sta Catalina',
+    'Mampang',
+    'Talon-Talon'
+  ];
 
   InputDecoration _textFieldDecoration(String label) {
     return InputDecoration(
@@ -91,6 +103,28 @@ class _AddPropertyState extends State<AddProperty> {
           child: ListView(
             children: [
               _buildCarousel(),
+              const SizedBox(height: 20),
+              DropdownButtonFormField<String>(
+                value: _selectedBarangay,
+                onChanged: (newValue) {
+                  setState(() {
+                    _selectedBarangay = newValue!;
+                  });
+                },
+                decoration: _textFieldDecoration('Barangay'),
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return 'Please select a Barangay';
+                  }
+                  return null;
+                },
+                items: baragays.map((baragay) {
+                  return DropdownMenuItem<String>(
+                    value: baragay,
+                    child: Text(baragay),
+                  );
+                }).toList(),
+              ),
               const SizedBox(height: 20),
               TextFormField(
                 controller: addressController,
@@ -260,6 +294,7 @@ class _AddPropertyState extends State<AddProperty> {
           'Latitude': double.tryParse(latitudeController.text) ?? 0.0,
           'Longitude': double.tryParse(longitudeController.text) ?? 0.0,
           'Status': _selectedStatus,
+          'Barangay': _selectedBarangay,
           'Email': widget.userInfo.email,
           'Price': double.tryParse(priceController.text) ?? 0.0,
           'Size': double.tryParse(sizeController.text) ?? 0.0,
@@ -273,7 +308,7 @@ class _AddPropertyState extends State<AddProperty> {
             .collection('Properties')
             .add(propertyData);
 
-        Fluttertoast.showToast(msg: "Property added successfully");
+        Fluttertoast.showToast(msg: "Property added and for verification.");
 
         // Clear form fields
         addressController.clear();

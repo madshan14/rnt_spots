@@ -1,3 +1,5 @@
+// ignore_for_file: use_build_context_synchronously
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
@@ -30,7 +32,6 @@ class _LoginState extends State<Login> {
 
   void _checkLoggedIn() async {
     final email = await storage.getFromSecureStorage("email");
-    print("Email is $email");
     if (email != "null") {
       // Navigate to home if email is present in secure storage
       Navigator.pushReplacement(
@@ -189,7 +190,6 @@ class _LoginState extends State<Login> {
         MaterialPageRoute(builder: (context) => const Home()),
       );
     } else {
-      print("Error: ${querySnapshot.docs}");
       // User does not exist
       ErrorDialog.showErrorDialog(context, "User does not exist!");
     }

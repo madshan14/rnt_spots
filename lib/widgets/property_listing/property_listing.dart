@@ -16,6 +16,17 @@ class PropertyListing extends StatefulWidget {
 
 class _PropertyListingState extends State<PropertyListing> {
   late Future<UserDto?> userInfoFuture;
+  String selectedLocation = 'All'; // Track the selected location
+
+  final List<String> locations = [
+    "All",
+    'Baliwasan',
+    'Tetuan',
+    'San Jose',
+    'Sta Catalina',
+    'Mampang',
+    'Talon-Talon'
+  ];
 
   @override
   void initState() {
@@ -26,52 +37,75 @@ class _PropertyListingState extends State<PropertyListing> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        backgroundColor: Colors.white,
-        foregroundColor: Colors.white,
-      ),
-      body: StreamBuilder<QuerySnapshot>(
-        stream: FirebaseFirestore.instance.collection('Properties').snapshots(),
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
-          } else if (snapshot.hasError) {
-            return Center(child: Text('Error: ${snapshot.error}'));
-          } else if (snapshot.hasData && snapshot.data!.docs.isNotEmpty) {
-            final List<PropertyDto> propertyList =
-                snapshot.data!.docs.map((doc) {
-              final Map<String, dynamic> data =
-                  doc.data() as Map<String, dynamic>;
-              return PropertyDto.fromFirestore(data, doc.id);
-            }).toList();
-
-            // Filter the property list based on user role
-            return FutureBuilder<UserDto?>(
-              future: userInfoFuture,
-              builder: (context, userSnapshot) {
-                if (userSnapshot.connectionState == ConnectionState.waiting) {
-                  return const Center(child: CircularProgressIndicator());
-                } else if (userSnapshot.hasError) {
-                  return Center(child: Text('Error: ${userSnapshot.error}'));
-                } else {
-                  final isAdmin = userSnapshot.data?.role == 'Admin';
-                  return ListView.builder(
-                    itemCount: propertyList.length,
-                    itemBuilder: (context, index) {
-                      final property = propertyList[index];
-                      final isVerified = property.verified;
-                      return (isVerified || isAdmin)
-                          ? _buildPropertyCard(property)
-                          : const SizedBox.shrink();
-                    },
-                  );
-                }
+      body: SafeArea(
+        child: Column(
+          children: [
+            DropdownButton<String>(
+              value: selectedLocation,
+              onChanged: (String? newValue) {
+                setState(() {
+                  selectedLocation = newValue!;
+                });
               },
-            );
-          } else {
-            return const Center(child: Text('No properties found.'));
-          }
-        },
+              items: locations.map<DropdownMenuItem<String>>((String value) {
+                return DropdownMenuItem<String>(
+                  value: value,
+                  child: Text(value),
+                );
+              }).toList(),
+            ),
+            Expanded(
+              child: StreamBuilder<QuerySnapshot>(
+                stream: FirebaseFirestore.instance
+                    .collection('Properties')
+                    .snapshots(),
+                builder: (context, snapshot) {
+                  if (snapshot.connectionState == ConnectionState.waiting) {
+                    return const Center(child: CircularProgressIndicator());
+                  } else if (snapshot.hasError) {
+                    return Center(child: Text('Error: ${snapshot.error}'));
+                  } else if (snapshot.hasData && snapshot.data!.docs.isNotEmpty) {
+                    final List<PropertyDto> propertyList =
+                        snapshot.data!.docs.map((doc) {
+                      final Map<String, dynamic> data =
+                          doc.data() as Map<String, dynamic>;
+                      return PropertyDto.fromFirestore(data, doc.id);
+                    }).toList();
+        
+                    // Filter the property list based on user role
+                    return FutureBuilder<UserDto?>(
+                      future: userInfoFuture,
+                      builder: (context, userSnapshot) {
+                        if (userSnapshot.connectionState ==
+                            ConnectionState.waiting) {
+                          return const Center(child: CircularProgressIndicator());
+                        } else if (userSnapshot.hasError) {
+                          return Center(
+                              child: Text('Error: ${userSnapshot.error}'));
+                        } else {
+                          final isAdmin = userSnapshot.data?.role == 'Admin';
+                          final filteredList = propertyList.where((property) =>
+                              (selectedLocation == 'All' || property.barangay == selectedLocation) &&
+                              (property.verified || isAdmin));
+        
+                          return ListView.builder(
+                            itemCount: filteredList.length,
+                            itemBuilder: (context, index) {
+                              final property = filteredList.elementAt(index);
+                              return _buildPropertyCard(property);
+                            },
+                          );
+                        }
+                      },
+                    );
+                  } else {
+                    return const Center(child: Text('No properties found.'));
+                  }
+                },
+              ),
+            ),
+          ],
+        ),
       ),
       floatingActionButton: FutureBuilder<UserDto?>(
         future: userInfoFuture,
@@ -132,7 +166,7 @@ class _PropertyListingState extends State<PropertyListing> {
                   borderRadius: BorderRadius.circular(16),
                   child: CarouselSlider(
                     options: CarouselOptions(
-                      aspectRatio: 16/12,
+                      aspectRatio: 16 / 12,
                       autoPlay: true,
                       autoPlayInterval: const Duration(seconds: 3),
                       enlargeCenterPage: true,
@@ -150,7 +184,7 @@ class _PropertyListingState extends State<PropertyListing> {
                   ),
                 ),
                 if (property.verified)
-                  Positioned(
+                  const Positioned(
                     top: 10,
                     right: 10,
                     child: Icon(

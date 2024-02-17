@@ -12,6 +12,7 @@ class PropertyDto {
   final double longitude;
   final bool verified;
   final String status;
+  final String barangay;
   final String id;
 
   PropertyDto({
@@ -26,6 +27,7 @@ class PropertyDto {
     required this.longitude,
     required this.verified,
     required this.status,
+    required this.barangay,
     required this.id,
   });
 
@@ -40,6 +42,7 @@ class PropertyDto {
     String price = data['Price']?.toString() ?? '';
     String email = data['Email']?.toString() ?? '';
     String status = data['Status']?.toString() ?? '';
+    String barangay = data['Barangay']?.toString() ?? '';
     String size = data['Size']?.toString() ?? '';
     bool verified = data['Verified'];
     double latitude = data['Latitude'];
@@ -62,6 +65,7 @@ class PropertyDto {
       longitude: longitude,
       verified: verified,
       status: status,
+      barangay: barangay,
       id: docId
     );
   }

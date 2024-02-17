@@ -1,16 +1,19 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:carousel_slider/carousel_slider.dart';
+import 'package:flutter_rating_bar/flutter_rating_bar.dart';
 import 'package:fluttertoast/fluttertoast.dart';
+import 'package:intl/intl.dart';
 import 'package:rnt_spots/dtos/property_dto.dart';
 import 'package:rnt_spots/shared/secure_storage.dart';
 import 'package:rnt_spots/widgets/goolgle_map/google_map_view.dart';
 import 'package:rnt_spots/widgets/property_listing/edit_property.dart';
+import 'package:rnt_spots/widgets/ratings/add_ratings.dart';
 
 class PropertyDetails extends StatefulWidget {
   final PropertyDto property;
 
-  const PropertyDetails({Key? key, required this.property}) : super(key: key);
+  const PropertyDetails({super.key, required this.property});
 
   @override
   State<PropertyDetails> createState() => _PropertyDetailsState();
@@ -21,6 +24,7 @@ final storage = SecureStorage();
 class _PropertyDetailsState extends State<PropertyDetails> {
   bool isLandlord = false;
   bool isAdmin = false;
+  bool isUser = false;
 
   @override
   void initState() {
@@ -30,9 +34,11 @@ class _PropertyDetailsState extends State<PropertyDetails> {
 
   void _getUserRole() async {
     final userRole = await storage.getFromSecureStorage("userRole");
+    final userEmail = await storage.getFromSecureStorage("email");
     setState(() {
       isLandlord = userRole == "Landlord";
       isAdmin = userRole == "Admin";
+      isUser = widget.property.email == userEmail;
     });
   }
 
@@ -68,7 +74,7 @@ class _PropertyDetailsState extends State<PropertyDetails> {
                 ],
               ),
             ),
-            floatingActionButton: isLandlord
+            floatingActionButton: isLandlord && isUser
                 ? FloatingActionButton(
                     onPressed: () {
                       Navigator.push(
@@ -87,7 +93,7 @@ class _PropertyDetailsState extends State<PropertyDetails> {
                 : null,
           );
         } else {
-          return Text('Property not found');
+          return const Text('Property not found');
         }
       },
     );
@@ -136,12 +142,12 @@ class _PropertyDetailsState extends State<PropertyDetails> {
                 ),
               ),
               if (property.verified)
-                Icon(
+                const Icon(
                   Icons.check_circle,
                   color: Colors.green,
                 ),
               if (!property.verified)
-                Icon(
+                const Icon(
                   Icons.warning,
                   color: Colors.red,
                 ),
@@ -181,6 +187,14 @@ class _PropertyDetailsState extends State<PropertyDetails> {
           ),
           const SizedBox(height: 8.0),
           Text(
+            'Barangay: ${property.barangay}',
+            style: const TextStyle(
+              fontWeight: FontWeight.bold,
+              fontSize: 16.0,
+            ),
+          ),
+          const SizedBox(height: 8.0),
+          Text(
             'Date: ${property.date}',
             style: const TextStyle(
               fontWeight: FontWeight.bold,
@@ -201,9 +215,6 @@ class _PropertyDetailsState extends State<PropertyDetails> {
   }
 
   Widget _buildReviewSection(PropertyDto property) {
-    // Dummy ratings data
-    final List<int> ratings = [5, 4, 3, 5, 2];
-
     return Padding(
       padding: const EdgeInsets.all(16.0),
       child: Column(
@@ -234,30 +245,131 @@ class _PropertyDetailsState extends State<PropertyDetails> {
               ),
             ),
           if (!isAdmin)
-            const Text(
-              'Reviews',
-              style: TextStyle(
-                fontWeight: FontWeight.bold,
-                fontSize: 18.0,
-              ),
-            ),
-          const SizedBox(height: 8.0),
-          if (!isAdmin)
             Row(
-              children: ratings.map((rating) {
-                return const Padding(
-                  padding: EdgeInsets.only(right: 8.0),
-                  child: Icon(
-                    Icons.star,
-                    color: Colors.amber,
-                    size: 24.0,
+              children: [
+                const Text(
+                  'Reviews',
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 18.0,
                   ),
-                );
-              }).toList(),
+                ),
+                const Spacer(),
+                if (!isAdmin && !isLandlord)
+                  ElevatedButton(
+                    onPressed: () {
+                      _navigateToAddRating(context, property.id);
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.redAccent,
+                      elevation: 0,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10.0),
+                      ),
+                    ),
+                    child: const Padding(
+                      padding: EdgeInsets.symmetric(
+                        horizontal: 16.0,
+                        vertical: 8.0,
+                      ),
+                      child: Text(
+                        'Add Review',
+                        style: TextStyle(fontSize: 16, color: Colors.white),
+                      ),
+                    ),
+                  ),
+              ],
             ),
           const SizedBox(height: 8.0),
-          // Add reviews here
+          StreamBuilder<QuerySnapshot>(
+            stream: FirebaseFirestore.instance
+                .collection('Ratings')
+                .where('propertyId', isEqualTo: property.id)
+                .snapshots(),
+            builder: (context, snapshot) {
+              if (snapshot.connectionState == ConnectionState.waiting) {
+                return CircularProgressIndicator();
+              }
+              if (snapshot.hasError) {
+                return Text('Error: ${snapshot.error}');
+              }
+              if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+                return Text('No reviews yet');
+              }
+              final List<double> ratings = snapshot.data!.docs
+                  .map((doc) => doc['rating'] as double)
+                  .toList();
+              final double averageRating =
+                  ratings.reduce((value, element) => value + element) /
+                      ratings.length;
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  RatingBar.builder(
+                    initialRating: averageRating,
+                    minRating: 1,
+                    direction: Axis.horizontal,
+                    allowHalfRating: true,
+                    itemCount: 5,
+                    itemPadding: EdgeInsets.symmetric(horizontal: 4.0),
+                    itemBuilder: (context, _) => Icon(
+                      Icons.star,
+                      color: Colors.amber,
+                    ),
+                    onRatingUpdate: (rating) {
+                      print(rating);
+                    },
+                  ),
+                  SizedBox(height: 8.0),
+                  Divider(),
+                  SizedBox(height: 8.0),
+                  // Display individual reviews
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: snapshot.data!.docs.map((doc) {
+                      final double rating = doc['rating'] as double;
+                      final String comment = doc['comment'] as String;
+                      final Timestamp timestamp = doc['timestamp'] as Timestamp;
+                      final DateTime dateTime = timestamp.toDate();
+                      final formattedDate =
+                          DateFormat.yMMMMd().format(dateTime);
+                      return Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              Text(
+                                'Rating: $rating',
+                                style: TextStyle(fontWeight: FontWeight.bold),
+                              ),
+                              SizedBox(width: 8.0),
+                              Text(
+                                formattedDate,
+                                style: TextStyle(fontStyle: FontStyle.italic),
+                              ),
+                            ],
+                          ),
+                          SizedBox(height: 4.0),
+                          Text(comment),
+                          Divider(),
+                        ],
+                      );
+                    }).toList(),
+                  ),
+                ],
+              );
+            },
+          ),
         ],
+      ),
+    );
+  }
+
+  void _navigateToAddRating(BuildContext context, String propertyId) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => AddRating(propertyId: propertyId),
       ),
     );
   }
