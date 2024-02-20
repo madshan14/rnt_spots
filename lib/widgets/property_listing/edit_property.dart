@@ -242,8 +242,8 @@ class _EditPropertyState extends State<EditProperty> {
                     child: Text('Available'),
                   ),
                   DropdownMenuItem<String>(
-                    value: 'Not Available',
-                    child: Text('Not Available'),
+                    value: 'Reserved',
+                    child: Text('Reserved'),
                   ),
                 ],
               ),

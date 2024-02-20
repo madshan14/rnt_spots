@@ -184,7 +184,7 @@ class _AddPropertyState extends State<AddProperty> {
                   }
                   return null;
                 },
-                items: ['Available', 'Not Available'].map((status) {
+                items: ['Available', 'Reserved'].map((status) {
                   return DropdownMenuItem<String>(
                     value: status,
                     child: Text(status),

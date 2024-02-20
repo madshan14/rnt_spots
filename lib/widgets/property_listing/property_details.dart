@@ -7,6 +7,7 @@ import 'package:intl/intl.dart';
 import 'package:rnt_spots/dtos/property_dto.dart';
 import 'package:rnt_spots/shared/secure_storage.dart';
 import 'package:rnt_spots/widgets/goolgle_map/google_map_view.dart';
+import 'package:rnt_spots/widgets/home/home.dart';
 import 'package:rnt_spots/widgets/property_listing/edit_property.dart';
 import 'package:rnt_spots/widgets/ratings/add_ratings.dart';
 
@@ -100,30 +101,141 @@ class _PropertyDetailsState extends State<PropertyDetails> {
   }
 
   Widget _buildImageSlider(PropertyDto property) {
-    return SizedBox(
-      height: 300,
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(16),
-        child: CarouselSlider(
-          options: CarouselOptions(
-            aspectRatio: 16 / 9,
-            autoPlay: true,
-            autoPlayInterval: const Duration(seconds: 3),
-            enlargeCenterPage: true,
-          ),
-          items: property.imageUrls.map((imageUrl) {
-            return Builder(
-              builder: (BuildContext context) {
-                return Image.network(
-                  imageUrl,
-                  fit: BoxFit.cover,
+    return Column(
+      children: [
+        SizedBox(
+          height: 300,
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(16),
+            child: CarouselSlider(
+              options: CarouselOptions(
+                aspectRatio: 16 / 9,
+                autoPlay: true,
+                autoPlayInterval: const Duration(seconds: 3),
+                enlargeCenterPage: true,
+              ),
+              items: property.imageUrls.map((imageUrl) {
+                return Builder(
+                  builder: (BuildContext context) {
+                    return Image.network(
+                      imageUrl,
+                      fit: BoxFit.cover,
+                    );
+                  },
                 );
-              },
-            );
-          }).toList(),
+              }).toList(),
+            ),
+          ),
         ),
-      ),
+        if ( widget.property.status != 'Reserved' && !isLandlord && !isAdmin)
+          Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: ElevatedButton(
+              onPressed: () {
+                _confirmReservation(context, property);
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.redAccent,
+              ),
+              child: const Text(
+                'Reserve',
+                style: TextStyle(fontSize: 20, color: Colors.white),
+              ),
+            ),
+          ),
+      ],
     );
+  }
+
+  Future<void> _confirmReservation(
+      BuildContext context, PropertyDto property) async {
+    getUserInfo().then((user) async {
+      if (user != null) {
+        final userInfoStream = await FirebaseFirestore.instance
+            .collection('Users')
+            .doc(user.id)
+            .get();
+
+        final landlordInfo = await FirebaseFirestore.instance
+            .collection('Users')
+            .where('email', isEqualTo: property.email)
+            .get();
+
+        final landlordId = landlordInfo.docs[0].id;
+        final double landlordBalance =
+            landlordInfo.docs[0].get('Balance') as double;
+
+        final double userBalance = userInfoStream['Balance'] as double;
+        final price = double.parse(property.price);
+        if (userBalance < price) {
+          // Display insufficient balance message
+          showDialog(
+            context: context,
+            builder: (BuildContext context) {
+              return AlertDialog(
+                title: Text('Insufficient Balance'),
+                content: Text(
+                    'You have insufficient balance to reserve this property.'),
+                actions: <Widget>[
+                  TextButton(
+                    onPressed: () {
+                      Navigator.of(context).pop();
+                    },
+                    child: Text('OK'),
+                  ),
+                ],
+              );
+            },
+          );
+        } else {
+          showDialog(
+            context: context,
+            builder: (BuildContext context) {
+              return AlertDialog(
+                title: Text('Confirm Reservation'),
+                content: Text(
+                    'Do you want to confirm the reservation for PHP ${property.price}?'),
+                actions: <Widget>[
+                  TextButton(
+                    onPressed: () {
+                      Navigator.of(context).pop();
+                    },
+                    child: Text('Cancel'),
+                  ),
+                  TextButton(
+                    onPressed: () async {
+                      double newBalance = userBalance - price;
+                      double newLandlordBalance = landlordBalance + price;
+
+                      final propertyRef = FirebaseFirestore.instance
+                          .collection('Properties')
+                          .doc(property.id);
+                      await propertyRef.update({'Status': 'Reserved'});
+
+                      final userRef = await FirebaseFirestore.instance
+                          .collection('Users')
+                          .doc(user.id);
+                      await userRef.update({'Balance': newBalance});
+
+                      final landlordRef = await FirebaseFirestore.instance
+                          .collection('Users')
+                          .doc(landlordId);
+                      await landlordRef.update({'Balance': newLandlordBalance});
+
+                      Navigator.of(context).pop();
+                      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                        content: Text('Reservation confirmed.'),
+                      ));
+                    },
+                    child: Text('Confirm'),
+                  ),
+                ],
+              );
+            },
+          );
+        }
+      }
+    });
   }
 
   Widget _buildDetails(PropertyDto property) {
@@ -340,12 +452,14 @@ class _PropertyDetailsState extends State<PropertyDetails> {
                             children: [
                               Text(
                                 'Rating: $rating',
-                                style: const TextStyle(fontWeight: FontWeight.bold),
+                                style: const TextStyle(
+                                    fontWeight: FontWeight.bold),
                               ),
                               const SizedBox(width: 8.0),
                               Text(
                                 formattedDate,
-                                style: const TextStyle(fontStyle: FontStyle.italic),
+                                style: const TextStyle(
+                                    fontStyle: FontStyle.italic),
                               ),
                             ],
                           ),
