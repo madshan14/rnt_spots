@@ -4,6 +4,9 @@ import 'package:rnt_spots/dtos/users_dto.dart';
 import 'package:rnt_spots/shared/error_dialog.dart';
 import 'package:rnt_spots/widgets/login/login.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:image_picker/image_picker.dart';
+import 'dart:io';
+import 'package:firebase_storage/firebase_storage.dart' as firebase_storage;
 
 class Register extends StatefulWidget {
   const Register({super.key});
@@ -19,11 +22,25 @@ class _RegisterState extends State<Register> {
   final TextEditingController lastNameController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
   final _formKey = GlobalKey<FormState>();
+  File? _imageFile;
 
   final List<String> roles = ['Tenant', 'Landlord'];
 
   String selectedRole = 'Tenant';
   bool _showPassword = false;
+  bool _isLoading = false;
+
+  Future<void> _pickImage() async {
+    final picker = ImagePicker();
+    final pickedImage = await picker.pickImage(source: ImageSource.gallery);
+    setState(() {
+      if (pickedImage != null) {
+        _imageFile = File(pickedImage.path);
+      } else {
+        print('No image selected.');
+      }
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -38,6 +55,7 @@ class _RegisterState extends State<Register> {
                 mainAxisAlignment: MainAxisAlignment.center,
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: <Widget>[
+                  const SizedBox(height: 20.0),
                   const Center(
                     child: Text(
                       'Create an Account',
@@ -58,6 +76,30 @@ class _RegisterState extends State<Register> {
                           color: Colors.grey,
                         ),
                       ),
+                    ),
+                  ),
+                  const SizedBox(height: 20.0),
+                  GestureDetector(
+                    onTap: _pickImage,
+                    child: CircleAvatar(
+                      radius: 100,
+                      backgroundColor: Colors.grey[200],
+                      backgroundImage: _imageFile != null
+                          ? FileImage(_imageFile!)
+                          : AssetImage('assets/default_profile_image.png')
+                              as ImageProvider, // Add default image
+                      child: Icon(
+                        Icons.camera_alt,
+                        size: 40,
+                        color: Colors.grey[700],
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 8.0),
+                  Center(
+                    child: Text(
+                      'Tap to select ID picture',
+                      style: TextStyle(color: Colors.grey),
                     ),
                   ),
                   // Form fields for sign-up
@@ -173,22 +215,27 @@ class _RegisterState extends State<Register> {
                   const SizedBox(height: 24.0),
                   // Sign-up button
                   ElevatedButton(
-                    onPressed: () {
-                      if (_formKey.currentState!.validate()) {
-                        _formKey.currentState!.save();
-                        _signUp();
-                      }
-                    },
+                    onPressed: _isLoading
+                        ? null
+                        : () {
+                            if (_formKey.currentState!.validate()) {
+                              _formKey.currentState!.save();
+                              _signUp();
+                            }
+                          },
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.redAccent,
                     ),
-                    child: const Padding(
-                      padding: EdgeInsets.all(8.0),
-                      child: Text(
-                        'Sign Up',
-                        style: TextStyle(fontSize: 24, color: Colors.white),
-                      ),
-                    ),
+                    child: _isLoading
+                        ? CircularProgressIndicator() // Show CircularProgressIndicator if loading
+                        : Padding(
+                            padding: const EdgeInsets.all(8.0),
+                            child: Text(
+                              'Sign Up',
+                              style:
+                                  TextStyle(fontSize: 24, color: Colors.white),
+                            ),
+                          ),
                   ),
                   const SizedBox(height: 16.0),
                   TextButton(
@@ -212,34 +259,49 @@ class _RegisterState extends State<Register> {
     );
   }
 
-  void _signUp() {
+  Future<void> _signUp() async {
+    if (_imageFile == null) {
+      // Show error message if image is not selected
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Please select a ID picture.'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
     final newUser = UserDto(
       email: emailController.text,
       firstName: firstNameController.text,
       lastName: lastNameController.text,
       password: passwordController.text,
+      status: 'Unverified',
       role: selectedRole,
     );
 
-    firestore
-        .collection('Users')
-        .where('email', isEqualTo: newUser.email)
-        .get()
-        .then((value) {
-      if (value.docs.isNotEmpty) {
-        ErrorDialog.showErrorDialog(context, "User is already registered!");
-      } else {
-        firestore.collection('Users').add(newUser.toJson()).then((value) {
-          Fluttertoast.showToast(msg: "Successfully Registered");
+    try {
+      // Upload image to Firebase Storage
+      final ref = firebase_storage.FirebaseStorage.instance
+          .ref()
+          .child('profile_images')
+          .child('${DateTime.now().millisecondsSinceEpoch}.jpg');
+      await ref.putFile(_imageFile!);
+      final imageUrl = await ref.getDownloadURL();
 
-          Navigator.pushReplacement(
-              context, MaterialPageRoute(builder: (context) => const Login()));
-        }).catchError((error) {
-          ErrorDialog.showErrorDialog(context, "Registration Error: $error");
-        });
-      }
-    }).catchError((error) {
-      ErrorDialog.showErrorDialog(context, "SignUp Error: $error");
-    });
+      // Update user object with image URL
+      newUser.imageUrl = imageUrl;
+
+      // Add user data to Firestore
+      await firestore.collection('Users').add(newUser.toJson());
+
+      Fluttertoast.showToast(msg: "Successfully Registered");
+
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => const Login()),
+      );
+    } catch (error) {
+      ErrorDialog.showErrorDialog(context, "Registration Error: $error");
+    }
   }
 }

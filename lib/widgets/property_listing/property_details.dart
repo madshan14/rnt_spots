@@ -173,15 +173,15 @@ class _PropertyDetailsState extends State<PropertyDetails> {
             context: context,
             builder: (BuildContext context) {
               return AlertDialog(
-                title: Text('Insufficient Balance'),
-                content: Text(
+                title: const Text('Insufficient Balance'),
+                content: const Text(
                     'You have insufficient balance to reserve this property.'),
                 actions: <Widget>[
                   TextButton(
                     onPressed: () {
                       Navigator.of(context).pop();
                     },
-                    child: Text('OK'),
+                    child: const Text('OK'),
                   ),
                 ],
               );
@@ -192,7 +192,7 @@ class _PropertyDetailsState extends State<PropertyDetails> {
             context: context,
             builder: (BuildContext context) {
               return AlertDialog(
-                title: Text('Confirm Reservation'),
+                title: const Text('Confirm Reservation'),
                 content: Text(
                     'Do you want to confirm the reservation for PHP ${property.price}?'),
                 actions: <Widget>[
@@ -200,7 +200,7 @@ class _PropertyDetailsState extends State<PropertyDetails> {
                     onPressed: () {
                       Navigator.of(context).pop();
                     },
-                    child: Text('Cancel'),
+                    child: const Text('Cancel'),
                   ),
                   TextButton(
                     onPressed: () async {
@@ -212,22 +212,22 @@ class _PropertyDetailsState extends State<PropertyDetails> {
                           .doc(property.id);
                       await propertyRef.update({'Status': 'Reserved'});
 
-                      final userRef = await FirebaseFirestore.instance
+                      final userRef = FirebaseFirestore.instance
                           .collection('Users')
                           .doc(user.id);
                       await userRef.update({'Balance': newBalance});
 
-                      final landlordRef = await FirebaseFirestore.instance
+                      final landlordRef = FirebaseFirestore.instance
                           .collection('Users')
                           .doc(landlordId);
                       await landlordRef.update({'Balance': newLandlordBalance});
 
                       Navigator.of(context).pop();
-                      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
                         content: Text('Reservation confirmed.'),
                       ));
                     },
-                    child: Text('Confirm'),
+                    child: const Text('Confirm'),
                   ),
                 ],
               );

@@ -47,7 +47,7 @@ class _AccountState extends State<Account> {
       body: Padding(
         padding: const EdgeInsets.all(20.0),
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+          crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             FutureBuilder<UserDto?>(
               future: userInfoFuture,
@@ -92,7 +92,9 @@ class _AccountState extends State<Account> {
             lastName: userData['lastName'],
             email: userData['email'],
             role: userData['role'],
+            status: userData['status'],
             balance: userData['Balance'] ?? user.balance,
+            imageUrl: userData['imageUrl'],
           );
           return _buildUserInfoWidget(updatedUserDto);
         } else {
@@ -104,32 +106,88 @@ class _AccountState extends State<Account> {
 
   Widget _buildUserInfoWidget(UserDto user) {
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
+      crossAxisAlignment: CrossAxisAlignment.center,
       children: [
-        Text(
-          'First Name: ${user.firstName}',
-          style: const TextStyle(fontSize: 18),
+        if (user.imageUrl != null)
+          Container(
+            width: 200, // Set the desired width
+            height: 200, // Set the desired height
+            child: Image.network(
+              user.imageUrl!,
+              loadingBuilder: (context, child, progress) {
+                if (progress == null) return child;
+                return CircularProgressIndicator();
+              },
+              errorBuilder: (context, error, stackTrace) =>
+                  Text('Error loading image'),
+              fit: BoxFit.cover, // Adjust this property according to your needs
+            ),
+          ),
+        SizedBox(height: 10),
+        Center(
+          child: Text(
+            'First Name: ${user.firstName}',
+            style: const TextStyle(fontSize: 18),
+          ),
         ),
         const SizedBox(height: 10),
-        Text(
-          'Last Name: ${user.lastName}',
-          style: const TextStyle(fontSize: 18),
+        Center(
+          child: Text(
+            'Last Name: ${user.lastName}',
+            style: const TextStyle(fontSize: 18),
+          ),
         ),
         const SizedBox(height: 10),
-        Text(
-          'Email: ${user.email}',
-          style: const TextStyle(fontSize: 18),
+        Center(
+          child: Text(
+            'Email: ${user.email}',
+            style: const TextStyle(fontSize: 18),
+          ),
         ),
         const SizedBox(height: 10),
-        Text(
-          'Role: ${user.role}',
-          style: const TextStyle(fontSize: 18),
+        Center(
+          child: Text(
+            'Role: ${user.role}',
+            style: const TextStyle(fontSize: 18),
+          ),
         ),
+        const SizedBox(height: 10),
+        if (user.status == 'Verified') // Check if status is Verified
+          Center(
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text(
+                  'Status: ${user.status}',
+                  style: const TextStyle(fontSize: 18),
+                ),
+                const SizedBox(width: 5),
+                Icon(Icons.check_circle,
+                    color: Colors.green), // Verified checkmark
+              ],
+            ),
+          ),
+        if (user.status == 'Unverified' && user.role != 'Admin') // Check if status is Unverified
+          Center(
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text(
+                  'Status: ${user.status}',
+                  style: const TextStyle(fontSize: 18),
+                ),
+                const SizedBox(width: 5),
+                Icon(Icons.cancel, color: Colors.red), // X icon for Unverified
+              ],
+            ),
+          ),
         const SizedBox(height: 10),
         if (user.role != 'Admin')
-          Text(
-            'Balance: PHP ${user.balance}',
-            style: const TextStyle(fontSize: 18),
+          Center(
+            child: Text(
+              'Balance: PHP ${user.balance}',
+              style: const TextStyle(fontSize: 18),
+            ),
           ),
         if (user.role != 'Admin') const SizedBox(height: 10),
         if (user.role != "Admin")
@@ -169,16 +227,16 @@ class _AccountState extends State<Account> {
       context: context,
       builder: (BuildContext context) {
         return Container(
-          padding: EdgeInsets.all(20),
+          padding: const EdgeInsets.all(20),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
+              const Text(
                 'Add Balance',
                 style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
               ),
-              SizedBox(height: 20),
+              const SizedBox(height: 20),
               TextFormField(
                 controller: amountController,
                 decoration: InputDecoration(
@@ -186,9 +244,10 @@ class _AccountState extends State<Account> {
                   errorText: amountError
                       ? 'Amount must be greater than 0'
                       : null, // Error text if amount is invalid
-                  errorStyle: TextStyle(color: Colors.red), // Error text style
+                  errorStyle:
+                      const TextStyle(color: Colors.red), // Error text style
                 ),
-                keyboardType: TextInputType.numberWithOptions(
+                keyboardType: const TextInputType.numberWithOptions(
                     decimal: true), // Allow decimal input
                 onChanged: (_) {
                   setState(() {
@@ -196,7 +255,7 @@ class _AccountState extends State<Account> {
                   });
                 },
               ),
-              SizedBox(height: 10),
+              const SizedBox(height: 10),
               DropdownButtonFormField<String>(
                 value: selectedPaymentMethod,
                 onChanged: (String? value) {
@@ -210,29 +269,27 @@ class _AccountState extends State<Account> {
                     child: Text(value),
                   );
                 }).toList(),
-                decoration: InputDecoration(
+                decoration: const InputDecoration(
                   labelText: 'Payment Method',
                 ),
               ),
-              SizedBox(height: 20),
+              const SizedBox(height: 20),
               ElevatedButton(
                 onPressed: () {
                   if (amountController.text.isEmpty ||
-                      double.parse(amountController.text) < 0) {
+                      double.parse(amountController.text) <= 0) {
                     setState(() {
                       amountError = true;
                     });
                     Fluttertoast.showToast(
                         msg: 'Amount must be greater than 0');
                   } else {
-                    setState(() {
-                      amountError = true;
-                    });
                     _addBalance(amountController.text, selectedPaymentMethod);
                     amountController.clear();
+                    Navigator.of(context).pop();
                   }
                 },
-                child: Text('Add'),
+                child: const Text('Add'),
               ),
             ],
           ),
@@ -246,14 +303,12 @@ class _AccountState extends State<Account> {
       UserDto? user = await userInfoFuture;
       double newBalance = double.parse(amount) + (user!.balance ?? 0.0);
 
-      // Retrieve existing balance from Firestore
       final userDoc = await FirebaseFirestore.instance
           .collection('Users')
           .doc(user.id)
           .get();
       final existingBalance = userDoc.get('Balance') ?? 0.0;
 
-      // Add the new balance to the existing balance
       newBalance += existingBalance;
 
       final userRef =
@@ -263,7 +318,7 @@ class _AccountState extends State<Account> {
         const SnackBar(content: Text('Balance added successfully')),
       );
       setState(() {
-        userInfoFuture = getUserInfo(); // Reload user information
+        userInfoFuture = getUserInfo();
       });
     } catch (error) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -281,12 +336,13 @@ class _AccountState extends State<Account> {
         },
         style: ElevatedButton.styleFrom(
           backgroundColor: Colors.redAccent,
+          textStyle: TextStyle(fontSize: 18),
         ),
         child: const Padding(
           padding: EdgeInsets.symmetric(vertical: 10),
           child: Text(
             'Logout',
-            style: TextStyle(fontSize: 18, color: Colors.white),
+            style: TextStyle(color: Colors.white),
           ),
         ),
       ),
@@ -303,14 +359,12 @@ class _AccountState extends State<Account> {
 
   void _editRole(UserDto user) async {
     final List<String> roles = ['Tenant', 'Landlord'];
-    // Update user role in Firestore
     try {
       final userRef =
           FirebaseFirestore.instance.collection('Users').doc(user.id);
       await userRef.update(
           {'role': roles.where((element) => element != user.role).first});
       setState(() {
-        // Reload user information after updating role
         userInfoFuture = getUserInfo();
       });
 
@@ -319,7 +373,7 @@ class _AccountState extends State<Account> {
       );
     } catch (error) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Failed to update user role')),
+        const SnackBar(content: Text('Failed to update user role')),
       );
     }
   }

@@ -3,8 +3,11 @@ import 'package:flutter/material.dart';
 import 'package:rnt_spots/dtos/users_dto.dart';
 import 'package:rnt_spots/shared/secure_storage.dart';
 import 'package:rnt_spots/widgets/account/account.dart';
+import 'package:rnt_spots/widgets/account/account_list.dart';
 import 'package:rnt_spots/widgets/inbox/inbox.dart';
 import 'package:rnt_spots/widgets/property_listing/property_listing.dart';
+
+final storage = SecureStorage();
 
 class Home extends StatefulWidget {
   const Home({super.key});
@@ -15,12 +18,32 @@ class Home extends StatefulWidget {
 
 class _HomeState extends State<Home> {
   int _selectedIndex = 0;
+  bool isAdmin = false;
 
-  final List<Widget> _screens = [
+  @override
+  void initState() {
+    super.initState();
+    _getUserRole();
+  }
+
+  final List<Widget> _screensAdmin = [
+    const PropertyListing(),
+    const AccountList(),
+    const Account(),
+  ];
+
+  final List<Widget> _screensNonAdmin = [
     const PropertyListing(),
     const Inbox(),
     const Account(),
   ];
+
+  void _getUserRole() async {
+    final userRole = await storage.getFromSecureStorage("userRole");
+    setState(() {
+      isAdmin = userRole == "Admin";
+    });
+  }
 
   void _onItemTapped(int index) {
     setState(() {
@@ -30,20 +53,32 @@ class _HomeState extends State<Home> {
 
   @override
   Widget build(BuildContext context) {
+    List<Widget> screensToShow = isAdmin ? _screensAdmin : _screensNonAdmin;
+
     return Scaffold(
-      body: _screens[_selectedIndex],
+      body: screensToShow[_selectedIndex],
       bottomNavigationBar: BottomNavigationBar(
-        items: const <BottomNavigationBarItem>[
+        items: <BottomNavigationBarItem>[
           BottomNavigationBarItem(
-            icon: Icon(Icons.home),
+            icon: Icon(Icons.home,
+                color: _selectedIndex == 0 ? Colors.redAccent : Colors.grey),
             label: 'Home',
           ),
+          if (!isAdmin)
+            BottomNavigationBarItem(
+              icon: Icon(Icons.message_outlined,
+                  color: _selectedIndex == 1 ? Colors.redAccent : Colors.grey),
+              label: 'Inbox',
+            ),
+          if (isAdmin)
+            BottomNavigationBarItem(
+              icon: Icon(Icons.account_box,
+                  color: _selectedIndex == 1 ? Colors.redAccent : Colors.grey),
+              label: 'Users',
+            ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.message_outlined),
-            label: 'Inbox',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.account_circle),
+            icon: Icon(Icons.account_circle,
+                color: _selectedIndex == 2 ? Colors.redAccent : Colors.grey),
             label: 'Profile',
           ),
         ],
@@ -75,7 +110,6 @@ Future<UserDto?> getUserInfo() async {
   final balance = userData['balance'];
   final id = userQuery.docs.first.id;
 
-  
   await storage.saveToSecureStorage('userRole', role);
 
   return UserDto(

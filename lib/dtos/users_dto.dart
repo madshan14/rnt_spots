@@ -8,6 +8,8 @@ class UserDto {
   final String firstName;
   final String lastName;
   final String? password;
+  final String? status;
+  String? imageUrl;
   final String role;
   final double? balance;
   final DateTime createdAt;
@@ -17,6 +19,8 @@ class UserDto {
       required this.firstName,
       required this.lastName,
       this.password,
+      this.status,
+      this.imageUrl,
       this.id,
       required this.role,
       double? balance,
@@ -30,7 +34,9 @@ class UserDto {
       'firstName': firstName,
       'lastName': lastName,
       'password': password,
+      'status': status,
       'role': role,
+      'imageUrl': imageUrl,
       'Balance': balance,
       'CreatedAt': Timestamp.fromDate(createdAt)
     };
