@@ -103,3 +103,10 @@ flutter:
   #
   # For details regarding fonts from package dependencies,
   # see https://flutter.dev/custom-fonts/#from-packages
+flutter_icons:
+  android: true
+  ios: true
+  image_path: "assets/RNT.png" 
+  adaptive_icon_foreground: "assets/RNT.png" 
+  adaptive_icon_background: "#FF0000"
+  adaptive_icon_padding: true # Path to your new icon file
