@@ -78,30 +78,6 @@ class _RegisterState extends State<Register> {
                       ),
                     ),
                   ),
-                  const SizedBox(height: 20.0),
-                  GestureDetector(
-                    onTap: _pickImage,
-                    child: CircleAvatar(
-                      radius: 100,
-                      backgroundColor: Colors.grey[200],
-                      backgroundImage: _imageFile != null
-                          ? FileImage(_imageFile!)
-                          : AssetImage('assets/default_profile_image.png')
-                              as ImageProvider, // Add default image
-                      child: Icon(
-                        Icons.camera_alt,
-                        size: 40,
-                        color: Colors.grey[700],
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 8.0),
-                  Center(
-                    child: Text(
-                      'Tap to select ID picture',
-                      style: TextStyle(color: Colors.grey),
-                    ),
-                  ),
                   // Form fields for sign-up
                   Form(
                       key: _formKey,
@@ -211,6 +187,50 @@ class _RegisterState extends State<Register> {
                           ),
                         ],
                       )),
+                  const SizedBox(height: 8.0),
+                  Container(
+                    child: _imageFile == null
+                        ? Container(
+                            decoration: BoxDecoration(
+                              border: Border.all(color: Colors.grey),
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            child: SizedBox(
+                              width: double.infinity,
+                              child: TextButton(
+                                onPressed: _pickImage,
+                                child: Text('Tap to select Valid ID'),
+                                style: TextButton.styleFrom(
+                                  padding: EdgeInsets.symmetric(vertical: 16.0),
+                                  primary: Colors.black,
+                                ),
+                              ),
+                            ),
+                          )
+                        : Container(
+                            width: double.infinity, // Consume available width
+                            height: 300,
+                            decoration: BoxDecoration(
+                              border: Border.all(color: Colors.grey),
+                            ),
+                            child: ClipRRect(
+                              // Border radius
+                              child: _imageFile != null
+                                  ? Image.file(
+                                      _imageFile!,
+                                      fit: BoxFit.fill,
+                                    )
+                                  : SizedBox(
+                                      // Adjust height as needed
+                                      child: Icon(
+                                        Icons.camera_alt,
+                                        size: 20,
+                                        color: Colors.grey[700],
+                                      ),
+                                    ),
+                            ),
+                          ),
+                  ),
 
                   const SizedBox(height: 24.0),
                   // Sign-up button

@@ -53,12 +53,12 @@ class _LoginState extends State<Login> {
             children: <Widget>[
               // Big text on the top
               Container(
-                width: 100, // Adjust width as needed
-                height: 100, // Adjust height as needed
+                width: 200, // Adjust width as needed
+                height: 200, // Adjust height as needed
                 decoration: BoxDecoration(
                   image: DecorationImage(
                     image: AssetImage(
-                        'assets/RNT.png'),
+                        'assets/rnt_.png'),
                     fit: BoxFit.contain,
                   ),
                 ),
