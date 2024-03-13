@@ -66,8 +66,6 @@ class _AccountState extends State<Account> {
                 }
               },
             ),
-            const SizedBox(height: 40),
-            _buildAddBalanceButton(),
             const SizedBox(height: 20),
             _buildLogoutButton(),
           ],
@@ -93,7 +91,6 @@ class _AccountState extends State<Account> {
             email: userData['email'],
             role: userData['role'],
             status: userData['status'],
-            balance: userData['Balance'] ?? user.balance,
             imageUrl: userData['imageUrl'],
           );
           return _buildUserInfoWidget(updatedUserDto);
@@ -181,14 +178,6 @@ class _AccountState extends State<Account> {
               ],
             ),
           ),
-        const SizedBox(height: 10),
-        if (user.role != 'Admin')
-          Center(
-            child: Text(
-              'Balance: PHP ${user.balance}',
-              style: const TextStyle(fontSize: 18),
-            ),
-          ),
         if (user.role != 'Admin') const SizedBox(height: 10),
         if (user.role != "Admin")
           ElevatedButton(
@@ -208,123 +197,6 @@ class _AccountState extends State<Account> {
           ),
       ],
     );
-  }
-
-  Widget _buildAddBalanceButton() {
-    return ElevatedButton(
-      onPressed: () {
-        _showAddBalanceModal();
-      },
-      child: const Text('Add Balance'),
-    );
-  }
-
-  void _showAddBalanceModal() {
-    TextEditingController amountController = TextEditingController();
-    String selectedPaymentMethod = 'GCASH'; // Default value
-    bool amountError = false; // Track if there is an amount error
-    showModalBottomSheet(
-      context: context,
-      builder: (BuildContext context) {
-        return Container(
-          padding: const EdgeInsets.all(20),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Text(
-                'Add Balance',
-                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-              ),
-              const SizedBox(height: 20),
-              TextFormField(
-                controller: amountController,
-                decoration: InputDecoration(
-                  labelText: 'Amount',
-                  errorText: amountError
-                      ? 'Amount must be greater than 0'
-                      : null, // Error text if amount is invalid
-                  errorStyle:
-                      const TextStyle(color: Colors.red), // Error text style
-                ),
-                keyboardType: const TextInputType.numberWithOptions(
-                    decimal: true), // Allow decimal input
-                onChanged: (_) {
-                  setState(() {
-                    amountError = false;
-                  });
-                },
-              ),
-              const SizedBox(height: 10),
-              DropdownButtonFormField<String>(
-                value: selectedPaymentMethod,
-                onChanged: (String? value) {
-                  setState(() {
-                    selectedPaymentMethod = value!;
-                  });
-                },
-                items: ['GCASH', 'MAYA', 'CREDIT CARD'].map((String value) {
-                  return DropdownMenuItem<String>(
-                    value: value,
-                    child: Text(value),
-                  );
-                }).toList(),
-                decoration: const InputDecoration(
-                  labelText: 'Payment Method',
-                ),
-              ),
-              const SizedBox(height: 20),
-              ElevatedButton(
-                onPressed: () {
-                  if (amountController.text.isEmpty ||
-                      double.parse(amountController.text) <= 0) {
-                    setState(() {
-                      amountError = true;
-                    });
-                    Fluttertoast.showToast(
-                        msg: 'Amount must be greater than 0');
-                  } else {
-                    _addBalance(amountController.text, selectedPaymentMethod);
-                    amountController.clear();
-                    Navigator.of(context).pop();
-                  }
-                },
-                child: const Text('Add'),
-              ),
-            ],
-          ),
-        );
-      },
-    );
-  }
-
-  void _addBalance(String amount, String paymentMethod) async {
-    try {
-      UserDto? user = await userInfoFuture;
-      double newBalance = double.parse(amount) + (user!.balance ?? 0.0);
-
-      final userDoc = await FirebaseFirestore.instance
-          .collection('Users')
-          .doc(user.id)
-          .get();
-      final existingBalance = userDoc.get('Balance') ?? 0.0;
-
-      newBalance += existingBalance;
-
-      final userRef =
-          FirebaseFirestore.instance.collection('Users').doc(user.id);
-      await userRef.update({'Balance': newBalance});
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Balance added successfully')),
-      );
-      setState(() {
-        userInfoFuture = getUserInfo();
-      });
-    } catch (error) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Failed to add balance: $error')),
-      );
-    }
   }
 
   Widget _buildLogoutButton() {
