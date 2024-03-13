@@ -26,7 +26,11 @@ class _EditPropertyState extends State<EditProperty> {
   final TextEditingController latitudeController = TextEditingController();
   final TextEditingController longitudeController = TextEditingController();
   final TextEditingController priceController = TextEditingController();
-  final TextEditingController sizeController = TextEditingController();
+  final TextEditingController widthController =
+      TextEditingController(); // New controller for width
+  final TextEditingController lengthController = TextEditingController();
+  final TextEditingController roomController =
+      TextEditingController(); 
 
   final _formKey = GlobalKey<FormState>();
 
@@ -35,108 +39,115 @@ class _EditPropertyState extends State<EditProperty> {
   String _landlord = "";
   String _selectedStatus = 'Available';
   String _selectedBarangay = "Baliwasan";
+  String _selectedHomeType = "House";
 
-final List<String> barangays = [
-  'Arena Blanco',
-  'Ayala',
-  'Baliwasan',
-  'Baluno',
-  'Boalan',
-  'Bolong',
-  'Buenavista',
-  'Bunguiao',
-  'Busay (Sacol Island)',
-  'Cabaluay',
-  'Cabatangan',
-  'Cacao',
-  'Calabasa',
-  'Calarian',
-  'Camino Nuevo',
-  'Campo Islam',
-  'Canelar',
-  'Capisan',
-  'Cawit',
-  'Culianan',
-  'Curuan',
-  'Dita',
-  'Divisoria',
-  'Dulian (Upper Bunguiao)',
-  'Dulian (Upper Pasonanca)',
-  'Guisao',
-  'Guiwan',
-  'Kasanyangan',
-  'La Paz',
-  'Labuan',
-  'Lamisahan',
-  'Landang Gua',
-  'Landang Laum',
-  'Lanzones',
-  'Lapakan',
-  'Latuan (Curuan)',
-  'Licomo',
-  'Limaong',
-  'Limpapa',
-  'Lubigan',
-  'Lumayang',
-  'Lumbangan',
-  'Lunzuran',
-  'Maasin',
-  'Malagutay',
-  'Mampang',
-  'Manalipa',
-  'Mangusu',
-  'Manicahan',
-  'Mariki',
-  'Mercedes',
-  'Muti',
-  'Pamucutan',
-  'Pangapuyan',
-  'Panubigan',
-  'Pasilmanta (Sacol Island)',
-  'Pasobolong',
-  'Pasonanca',
-  'Patalon',
-  'Putik',
-  'Quiniput',
-  'Recodo',
-  'Rio Hondo',
-  'Salaan',
-  'San Jose Cawa-cawa',
-  'San Jose Gusu',
-  'San Ramon',
-  'San Roque',
-  'Sangali',
-  'Santa Barbara',
-  'Santa Catalina',
-  'Santa Maria',
-  'Santo Niño',
-  'Sibulao (Caruan)',
-  'Sinubung',
-  'Sinunoc',
-  'Tagasilay',
-  'Taguiti',
-  'Talabaan',
-  'Talisayan',
-  'Talon-talon',
-  'Taluksangay',
-  'Tetuan',
-  'Tictapul',
-  'Tigbalabag',
-  'Tigtabon',
-  'Tolosa',
-  'Tugbungan',
-  'Tulungatung',
-  'Tumaga',
-  'Tumalutab',
-  'Tumitus',
-  'Victoria',
-  'Vitali',
-  'Zambowood',
-  'Zone I (Poblacion)',
-  'Zone II (Poblacion)',
-  'Zone III (Poblacion)',
-  'Zone IV (Poblacion)'
-];
+  final List<String> homeTypes = [
+    'House',
+    'Apartment',
+    'Boarding House',
+    'Dormitories'
+  ];
+  final List<String> barangays = [
+    'Arena Blanco',
+    'Ayala',
+    'Baliwasan',
+    'Baluno',
+    'Boalan',
+    'Bolong',
+    'Buenavista',
+    'Bunguiao',
+    'Busay (Sacol Island)',
+    'Cabaluay',
+    'Cabatangan',
+    'Cacao',
+    'Calabasa',
+    'Calarian',
+    'Camino Nuevo',
+    'Campo Islam',
+    'Canelar',
+    'Capisan',
+    'Cawit',
+    'Culianan',
+    'Curuan',
+    'Dita',
+    'Divisoria',
+    'Dulian (Upper Bunguiao)',
+    'Dulian (Upper Pasonanca)',
+    'Guisao',
+    'Guiwan',
+    'Kasanyangan',
+    'La Paz',
+    'Labuan',
+    'Lamisahan',
+    'Landang Gua',
+    'Landang Laum',
+    'Lanzones',
+    'Lapakan',
+    'Latuan (Curuan)',
+    'Licomo',
+    'Limaong',
+    'Limpapa',
+    'Lubigan',
+    'Lumayang',
+    'Lumbangan',
+    'Lunzuran',
+    'Maasin',
+    'Malagutay',
+    'Mampang',
+    'Manalipa',
+    'Mangusu',
+    'Manicahan',
+    'Mariki',
+    'Mercedes',
+    'Muti',
+    'Pamucutan',
+    'Pangapuyan',
+    'Panubigan',
+    'Pasilmanta (Sacol Island)',
+    'Pasobolong',
+    'Pasonanca',
+    'Patalon',
+    'Putik',
+    'Quiniput',
+    'Recodo',
+    'Rio Hondo',
+    'Salaan',
+    'San Jose Cawa-cawa',
+    'San Jose Gusu',
+    'San Ramon',
+    'San Roque',
+    'Sangali',
+    'Santa Barbara',
+    'Santa Catalina',
+    'Santa Maria',
+    'Santo Niño',
+    'Sibulao (Caruan)',
+    'Sinubung',
+    'Sinunoc',
+    'Tagasilay',
+    'Taguiti',
+    'Talabaan',
+    'Talisayan',
+    'Talon-talon',
+    'Taluksangay',
+    'Tetuan',
+    'Tictapul',
+    'Tigbalabag',
+    'Tigtabon',
+    'Tolosa',
+    'Tugbungan',
+    'Tulungatung',
+    'Tumaga',
+    'Tumalutab',
+    'Tumitus',
+    'Victoria',
+    'Vitali',
+    'Zambowood',
+    'Zone I (Poblacion)',
+    'Zone II (Poblacion)',
+    'Zone III (Poblacion)',
+    'Zone IV (Poblacion)'
+  ];
 
   @override
   void initState() {
@@ -170,9 +181,12 @@ final List<String> barangays = [
     latitudeController.text = property.latitude.toString();
     longitudeController.text = property.longitude.toString();
     priceController.text = property.price.toString();
-    sizeController.text = property.size.toString();
+    widthController.text = property.width.toString();
+    lengthController.text = property.length.toString();
+    roomController.text = property.room.toString();
     _selectedStatus = property.status;
     _selectedBarangay = property.barangay;
+    _selectedHomeType = property.type;
     _landlord = property.landlord;
   }
 
@@ -353,13 +367,53 @@ final List<String> barangays = [
                 },
               ),
               const SizedBox(height: 10),
+              DropdownButtonFormField<String>(
+                value: _selectedHomeType,
+                onChanged: (newValue) {
+                  setState(() {
+                    _selectedHomeType = newValue!;
+                  });
+                },
+                decoration: _textFieldDecoration(
+                    'Home Type'), // New dropdown field for home type
+                items: homeTypes.map((type) {
+                  return DropdownMenuItem<String>(
+                    value: type,
+                    child: Text(type),
+                  );
+                }).toList(),
+              ),
+              const SizedBox(height: 10),
               TextFormField(
-                controller: sizeController,
+                controller: widthController,
                 keyboardType: TextInputType.number,
-                decoration: _textFieldDecoration('Size'),
+                decoration: _textFieldDecoration('Width'),
                 validator: (value) {
                   if (value == null || value.isEmpty) {
-                    return 'Please enter Size';
+                    return 'Please enter Width';
+                  }
+                  return null;
+                },
+              ),
+              const SizedBox(height: 10),
+              TextFormField(
+                controller: lengthController,
+                keyboardType: TextInputType.number,
+                decoration: _textFieldDecoration('Length'),
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return 'Please enter Length';
+                  }
+                  return null;
+                },
+              ),const SizedBox(height: 10),
+              TextFormField(
+                controller: roomController,
+                keyboardType: TextInputType.number,
+                decoration: _textFieldDecoration('Rooms'),
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return 'Please enter Rooms';
                   }
                   return null;
                 },
@@ -440,13 +494,16 @@ final List<String> barangays = [
         final propertyData = {
           'Landlord': landlord,
           'Address': addressController.text,
+          'Room': roomController.text,
           'Latitude': double.tryParse(latitudeController.text) ?? 0.0,
           'Longitude': double.tryParse(longitudeController.text) ?? 0.0,
           'Status': _selectedStatus,
+          'Type': _selectedHomeType,
           'Barangay': _selectedBarangay,
           'Email': widget.property!.email,
           'Price': double.tryParse(priceController.text) ?? 0.0,
-          'Size': double.tryParse(sizeController.text) ?? 0.0,
+          'Width': double.tryParse(widthController.text) ?? 0.0,
+          'Length': double.tryParse(lengthController.text) ?? 0.0,
           'Images': imageUrls,
           'Date': DateTime.now().toIso8601String(),
         };

@@ -7,11 +7,14 @@ class PropertyDto {
   final String date;
   final String price;
   final String email;
-  final String size;
+  final String width;
+  final String room;
+  final String length;
   final double latitude;
   final double longitude;
   final bool verified;
   final String status;
+  final String type;
   final String barangay;
   final String id;
 
@@ -21,12 +24,15 @@ class PropertyDto {
     required this.address,
     required this.date,
     required this.price,
-    required this.size,
+    required this.room,
+    required this.width,
+    required this.length,
     required this.email,
     required this.latitude,
     required this.longitude,
     required this.verified,
     required this.status,
+    required this.type,
     required this.barangay,
     required this.id,
   });
@@ -42,31 +48,36 @@ class PropertyDto {
     String price = data['Price']?.toString() ?? '';
     String email = data['Email']?.toString() ?? '';
     String status = data['Status']?.toString() ?? '';
+    String type = data['Type']?.toString() ?? '';
     String barangay = data['Barangay']?.toString() ?? '';
-    String size = data['Size']?.toString() ?? '';
+    String width = data['Width']?.toString() ?? '';
+    String length = data['Length']?.toString() ?? '';
+    String room = data['Room']?.toString() ?? '';
     bool verified = data['Verified'];
     double latitude = data['Latitude'];
     double longitude = data['Longitude'];
- // Parse the date string to DateTime
+    // Parse the date string to DateTime
     DateTime parsedDate = DateTime.tryParse(date) ?? DateTime.now();
-    
+
     // Format the date as "February 14, 1999"
     String formattedDate = DateFormat('MMMM dd, yyyy').format(parsedDate);
 
     return PropertyDto(
-      imageUrls: imageUrls,
-      landlord: landlord,
-      address: address,
-      date: formattedDate,
-      price: price,
-      size: size,
-      email: email,
-      latitude: latitude,
-      longitude: longitude,
-      verified: verified,
-      status: status,
-      barangay: barangay,
-      id: docId
-    );
+        imageUrls: imageUrls,
+        landlord: landlord,
+        address: address,
+        date: formattedDate,
+        price: price,
+        width: width,
+        length: length,
+        email: email,
+        room: room,
+        latitude: latitude,
+        longitude: longitude,
+        verified: verified,
+        status: status,
+        type: type,
+        barangay: barangay,
+        id: docId);
   }
 }

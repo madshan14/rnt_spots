@@ -127,7 +127,7 @@ class _PropertyDetailsState extends State<PropertyDetails> {
             ),
           ),
         ),
-        if ( widget.property.status != 'Reserved' && !isLandlord && !isAdmin)
+        if (widget.property.status != 'Reserved' && !isLandlord && !isAdmin)
           Padding(
             padding: const EdgeInsets.all(16.0),
             child: ElevatedButton(
@@ -275,7 +275,15 @@ class _PropertyDetailsState extends State<PropertyDetails> {
           ),
           const SizedBox(height: 8.0),
           Text(
-            'Size: ${property.size}',
+            'Width: ${property.width}',
+            style: const TextStyle(
+              fontWeight: FontWeight.bold,
+              fontSize: 16.0,
+            ),
+          ),
+          const SizedBox(height: 8.0),
+          Text(
+            'Length: ${property.length}',
             style: const TextStyle(
               fontWeight: FontWeight.bold,
               fontSize: 16.0,
@@ -284,6 +292,22 @@ class _PropertyDetailsState extends State<PropertyDetails> {
           const SizedBox(height: 8.0),
           Text(
             'Status: ${property.status}',
+            style: const TextStyle(
+              fontWeight: FontWeight.bold,
+              fontSize: 16.0,
+            ),
+          ),
+          const SizedBox(height: 8.0),
+          Text(
+            'Home Type: ${property.type}',
+            style: const TextStyle(
+              fontWeight: FontWeight.bold,
+              fontSize: 16.0,
+            ),
+          ),
+          const SizedBox(height: 8.0),
+          Text(
+            'Rooms: ${property.room}',
             style: const TextStyle(
               fontWeight: FontWeight.bold,
               fontSize: 16.0,
