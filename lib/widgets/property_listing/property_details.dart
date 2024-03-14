@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:carousel_slider/carousel_slider.dart';
 import 'package:flutter_rating_bar/flutter_rating_bar.dart';
@@ -8,8 +9,11 @@ import 'package:rnt_spots/dtos/property_dto.dart';
 import 'package:rnt_spots/shared/secure_storage.dart';
 import 'package:rnt_spots/widgets/goolgle_map/google_map_view.dart';
 import 'package:rnt_spots/widgets/home/home.dart';
+import 'package:rnt_spots/widgets/inbox/conversation.dart';
 import 'package:rnt_spots/widgets/property_listing/edit_property.dart';
 import 'package:rnt_spots/widgets/ratings/add_ratings.dart';
+import 'package:image_picker/image_picker.dart';
+import 'dart:io';
 
 class PropertyDetails extends StatefulWidget {
   final PropertyDto property;
@@ -26,6 +30,8 @@ class _PropertyDetailsState extends State<PropertyDetails> {
   bool isLandlord = false;
   bool isAdmin = false;
   bool isUser = false;
+  late bool isTenant;
+  String? user;
 
   @override
   void initState() {
@@ -40,7 +46,25 @@ class _PropertyDetailsState extends State<PropertyDetails> {
       isLandlord = userRole == "Landlord";
       isAdmin = userRole == "Admin";
       isUser = widget.property.email == userEmail;
+      isTenant = userRole == "Tenant";
+      user = userEmail ?? "";
     });
+  }
+
+  Future<void> _createNewMessage(BuildContext context, String landlord) async {
+    final groupRef =
+        await FirebaseFirestore.instance.collection('GroupMessages').add({
+      'members': [user, landlord]
+    });
+
+    // Navigate to the screen to create a new message
+    Navigator.pop(context); // Close the new message screen
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => ConversationScreen(groupId: groupRef.id),
+      ),
+    );
   }
 
   @override
@@ -75,23 +99,30 @@ class _PropertyDetailsState extends State<PropertyDetails> {
                 ],
               ),
             ),
-            floatingActionButton: isLandlord && isUser
+            floatingActionButton: isTenant
                 ? FloatingActionButton(
                     onPressed: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => EditProperty(
-                            property: property,
-                          ),
-                        ),
-                      );
+                      _createNewMessage(context, widget.property.email);
                     },
-                    backgroundColor: Colors.redAccent,
-                    foregroundColor: Colors.white,
-                    child: const Icon(Icons.edit),
+                    child: const Icon(Icons.message),
                   )
-                : null,
+                : isLandlord && isUser
+                    ? FloatingActionButton(
+                        onPressed: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => EditProperty(
+                                property: property,
+                              ),
+                            ),
+                          );
+                        },
+                        backgroundColor: Colors.redAccent,
+                        foregroundColor: Colors.white,
+                        child: const Icon(Icons.edit),
+                      )
+                    : null,
           );
         } else {
           return const Text('Property not found');
@@ -149,93 +180,136 @@ class _PropertyDetailsState extends State<PropertyDetails> {
 
   Future<void> _confirmReservation(
       BuildContext context, PropertyDto property) async {
-    getUserInfo().then((user) async {
-      if (user != null) {
-        final userInfoStream = await FirebaseFirestore.instance
-            .collection('Users')
-            .doc(user.id)
-            .get();
+    final DateTime? selectedDate = await showDatePicker(
+      context: context,
+      initialDate: DateTime.now(),
+      firstDate: DateTime.now(),
+      lastDate: DateTime(2100),
+    );
 
-        final landlordInfo = await FirebaseFirestore.instance
-            .collection('Users')
-            .where('email', isEqualTo: property.email)
-            .get();
+    if (selectedDate != null) {
+      String? paymentMethod;
+      File? receiptImage;
+      bool uploading = false;
 
-        final landlordId = landlordInfo.docs[0].id;
-        final double landlordBalance =
-            landlordInfo.docs[0].get('Balance') as double;
-
-        final double userBalance = userInfoStream['Balance'] as double;
-        final price = double.parse(property.price);
-        if (userBalance < price) {
-          // Display insufficient balance message
-          showDialog(
-            context: context,
-            builder: (BuildContext context) {
-              return AlertDialog(
-                title: const Text('Insufficient Balance'),
-                content: const Text(
-                    'You have insufficient balance to reserve this property.'),
-                actions: <Widget>[
-                  TextButton(
-                    onPressed: () {
-                      Navigator.of(context).pop();
+      await showDialog(
+        context: context,
+        builder: (context) => StatefulBuilder(
+          builder: (context, setState) {
+            return AlertDialog(
+              title: Text('Select Payment Method'),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  DropdownButtonFormField<String>(
+                    decoration: InputDecoration(
+                      labelText: 'Payment Method',
+                      border: OutlineInputBorder(),
+                    ),
+                    items: ['GCASH', 'Palawan', 'MLhullier', 'Cebuana']
+                        .map((method) => DropdownMenuItem(
+                              value: method,
+                              child: Text(method),
+                            ))
+                        .toList(),
+                    onChanged: (value) {
+                      paymentMethod = value;
                     },
-                    child: const Text('OK'),
                   ),
-                ],
-              );
-            },
-          );
-        } else {
-          showDialog(
-            context: context,
-            builder: (BuildContext context) {
-              return AlertDialog(
-                title: const Text('Confirm Reservation'),
-                content: Text(
-                    'Do you want to confirm the reservation for PHP ${property.price}?'),
-                actions: <Widget>[
-                  TextButton(
-                    onPressed: () {
-                      Navigator.of(context).pop();
-                    },
-                    child: const Text('Cancel'),
-                  ),
-                  TextButton(
+                  SizedBox(height: 16),
+                  ElevatedButton(
                     onPressed: () async {
-                      double newBalance = userBalance - price;
-                      double newLandlordBalance = landlordBalance + price;
-
-                      final propertyRef = FirebaseFirestore.instance
-                          .collection('Properties')
-                          .doc(property.id);
-                      await propertyRef.update({'Status': 'Reserved'});
-
-                      final userRef = FirebaseFirestore.instance
-                          .collection('Users')
-                          .doc(user.id);
-                      await userRef.update({'Balance': newBalance});
-
-                      final landlordRef = FirebaseFirestore.instance
-                          .collection('Users')
-                          .doc(landlordId);
-                      await landlordRef.update({'Balance': newLandlordBalance});
-
-                      Navigator.of(context).pop();
-                      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-                        content: Text('Reservation confirmed.'),
-                      ));
+                      final picker = ImagePicker();
+                      final pickedFile =
+                          await picker.getImage(source: ImageSource.gallery);
+                      if (pickedFile != null) {
+                        receiptImage = File(pickedFile.path);
+                      }
                     },
-                    child: const Text('Confirm'),
+                    child: Text('Upload Receipt Image'),
                   ),
                 ],
-              );
-            },
-          );
-        }
-      }
-    });
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () {
+                    Navigator.pop(context);
+                  },
+                  child: Text('Cancel'),
+                ),
+                ElevatedButton(
+                  onPressed: uploading
+                      ? null
+                      : () async {
+                          if (paymentMethod != null && receiptImage != null) {
+                            setState(() {
+                              uploading = true;
+                            });
+
+                            // Save reservation with payment method and receipt image
+                            final reservationData = {
+                              'propertyId': property.id,
+                              'reservedBy': user,
+                              'reservationDate': selectedDate,
+                              'paymentMethod': paymentMethod,
+                            };
+
+                            // Upload receipt image to storage (replace 'receipts' with your storage path)
+                            final storageRef = FirebaseStorage.instance
+                                .ref()
+                                .child('receipts')
+                                .child(
+                                    '${DateTime.now().millisecondsSinceEpoch}.jpg');
+                            final uploadTask =
+                                storageRef.putFile(receiptImage!);
+                            final TaskSnapshot taskSnapshot =
+                                await uploadTask.whenComplete(() => null);
+                            final String downloadUrl =
+                                await taskSnapshot.ref.getDownloadURL();
+                            reservationData['receiptUrl'] = downloadUrl;
+
+                            // Save reservation data to Firestore
+                            await FirebaseFirestore.instance
+                                .collection('Reservations')
+                                .add(reservationData);
+
+                            // Show confirmation message
+                            Navigator.pop(context); // Close the dialog
+                            ScaffoldMessenger.of(context)
+                                .showSnackBar(const SnackBar(
+                              content: Text('Reservation confirmed.'),
+                            ));
+                          } else {
+                            ScaffoldMessenger.of(context)
+                                .showSnackBar(const SnackBar(
+                              content: Text(
+                                  'Please select payment method and upload receipt image.'),
+                            ));
+                          }
+                        },
+                  child: uploading
+                      ? SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator(
+                            valueColor:
+                                AlwaysStoppedAnimation<Color>(Colors.white),
+                          ),
+                        )
+                      : Text('Confirm'),
+                ),
+              ],
+            );
+          },
+        ),
+      );
+    } else {
+      // User canceled reservation
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+        content: Text('Reservation canceled.'),
+      ));
+    }
   }
 
   Widget _buildDetails(PropertyDto property) {

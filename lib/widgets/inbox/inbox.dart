@@ -35,10 +35,8 @@ class _InboxState extends State<Inbox> {
         final members = doc['members'] as List<dynamic>;
 
         // Exclude the current user's email from the list of members
-        final filteredMembers = members
-            .cast<String>()
-            .where((member) => member != email)
-            .toList();
+        final filteredMembers =
+            members.cast<String>().where((member) => member != email).toList();
 
         return GroupMessage(
           id: messageId,
@@ -48,40 +46,11 @@ class _InboxState extends State<Inbox> {
     });
   }
 
-  Future<void> _createNewMessage(BuildContext context) async {
-    // Retrieve all landlords
-    final querySnapshot =
-        await FirebaseFirestore.instance.collection('Users').get();
-    final List<String> landlords = [];
-
-    for (final doc in querySnapshot.docs) {
-      final role = doc['role'] as String?;
-      if (role == 'Landlord') {
-        final email = doc['email'] as String;
-        landlords.add(email);
-      }
-    }
-
-    // Navigate to the screen to create a new message
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => NewMessageScreen(landlords: landlords),
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Inbox'),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.add),
-            onPressed: () => _createNewMessage(context),
-          ),
-        ],
       ),
       body: StreamBuilder<List<GroupMessage>>(
         stream: _groupMessagesStream,
