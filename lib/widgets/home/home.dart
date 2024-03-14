@@ -6,6 +6,7 @@ import 'package:rnt_spots/widgets/account/account.dart';
 import 'package:rnt_spots/widgets/account/account_list.dart';
 import 'package:rnt_spots/widgets/inbox/inbox.dart';
 import 'package:rnt_spots/widgets/property_listing/property_listing.dart';
+import 'package:rnt_spots/widgets/reservation/reservation.dart';
 
 final storage = SecureStorage();
 
@@ -19,30 +20,47 @@ class Home extends StatefulWidget {
 class _HomeState extends State<Home> {
   int _selectedIndex = 0;
   bool isAdmin = false;
+  String? user;
+  late List<Widget> _screensAdmin;
+  late List<Widget> _screensNonAdmin;
 
   @override
   void initState() {
     super.initState();
     _getUserRole();
+    _initializeScreensAdmin();
+    _initializeScreensNonAdmin();
   }
-
-  final List<Widget> _screensAdmin = [
-    const PropertyListing(),
-    const AccountList(),
-    const Account(),
-  ];
-
-  final List<Widget> _screensNonAdmin = [
-    const PropertyListing(),
-    const Inbox(),
-    const Account(),
-  ];
 
   void _getUserRole() async {
     final userRole = await storage.getFromSecureStorage("userRole");
+    final email = await storage.getFromSecureStorage("email");
     setState(() {
       isAdmin = userRole == "Admin";
+      user = email ?? "";
     });
+  }
+
+  void _initializeScreensAdmin() {
+    _screensAdmin = [
+      const PropertyListing(),
+      ReservationScreen(
+        reserveTo: user,
+      ),
+      const AccountList(),
+      const Account(),
+    ];
+  }
+
+  void _initializeScreensNonAdmin() {
+    _screensNonAdmin = [
+      const PropertyListing(),
+      ReservationScreen(
+        reserveBy: user,
+      ),
+      const Inbox(),
+      const Account(),
+    ];
   }
 
   void _onItemTapped(int index) {
@@ -64,21 +82,26 @@ class _HomeState extends State<Home> {
                 color: _selectedIndex == 0 ? Colors.redAccent : Colors.grey),
             label: 'Home',
           ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.workspaces,
+                color: _selectedIndex == 1 ? Colors.redAccent : Colors.grey),
+            label: 'Reservations',
+          ),
           if (!isAdmin)
             BottomNavigationBarItem(
               icon: Icon(Icons.message_outlined,
-                  color: _selectedIndex == 1 ? Colors.redAccent : Colors.grey),
+                  color: _selectedIndex == 2 ? Colors.redAccent : Colors.grey),
               label: 'Inbox',
             ),
           if (isAdmin)
             BottomNavigationBarItem(
               icon: Icon(Icons.account_box,
-                  color: _selectedIndex == 1 ? Colors.redAccent : Colors.grey),
+                  color: _selectedIndex == 2 ? Colors.redAccent : Colors.grey),
               label: 'Users',
             ),
           BottomNavigationBarItem(
             icon: Icon(Icons.account_circle,
-                color: _selectedIndex == 2 ? Colors.redAccent : Colors.grey),
+                color: _selectedIndex == 3 ? Colors.redAccent : Colors.grey),
             label: 'Profile',
           ),
         ],

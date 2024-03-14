@@ -222,7 +222,7 @@ class _PropertyDetailsState extends State<PropertyDetails> {
                     onPressed: () async {
                       final picker = ImagePicker();
                       final pickedFile =
-                          await picker.getImage(source: ImageSource.gallery);
+                          await picker.pickImage(source: ImageSource.gallery);
                       if (pickedFile != null) {
                         receiptImage = File(pickedFile.path);
                       }
@@ -251,8 +251,10 @@ class _PropertyDetailsState extends State<PropertyDetails> {
                             final reservationData = {
                               'propertyId': property.id,
                               'reservedBy': user,
+                              'reservedTo': widget.property.landlord,
                               'reservationDate': selectedDate,
                               'paymentMethod': paymentMethod,
+                              'status': "Pending"
                             };
 
                             // Upload receipt image to storage (replace 'receipts' with your storage path)
