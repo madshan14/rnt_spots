@@ -115,7 +115,10 @@ class _PropertyDetailsState extends State<PropertyDetails> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  _buildImageSlider(property),
+                  Hero(
+                    tag: 'property_image_${widget.property.id}',
+                    child: _buildImageSlider(widget.property),
+                  ),
                   _buildDetails(property),
                   _buildViewOnMapButton(property),
                   _buildReviewSection(property),

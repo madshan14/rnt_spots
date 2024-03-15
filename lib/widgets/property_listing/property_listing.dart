@@ -6,6 +6,7 @@ import 'package:rnt_spots/widgets/home/home.dart';
 import 'package:rnt_spots/widgets/property_listing/add_property.dart';
 import 'package:carousel_slider/carousel_slider.dart';
 import 'package:rnt_spots/widgets/property_listing/property_details.dart';
+import 'package:rnt_spots/widgets/property_listing/unverified_listing.dart';
 
 class PropertyListing extends StatefulWidget {
   const PropertyListing({super.key});
@@ -47,43 +48,45 @@ class _PropertyListingState extends State<PropertyListing> {
             Padding(
               padding: const EdgeInsets.all(10.0),
               child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                DropdownButton<String>(
-                  value: selectedLocation,
-                  onChanged: (String? newValue) {
-                    setState(() {
-                      selectedLocation = newValue!;
-                    });
-                  },
-                  items: locations.map<DropdownMenuItem<String>>((String value) {
-                    return DropdownMenuItem<String>(
-                      value: value,
-                      child: Text(value),
-                    );
-                  }).toList(),
-                ),
-                Row(
-                  children: [
-                    const Text('Sort By: '),
-                    DropdownButton<SortOption>(
-                      value: selectedSortOption,
-                      onChanged: (SortOption? newValue) {
-                        setState(() {
-                          selectedSortOption = newValue!;
-                        });
-                      },
-                      items: SortOption.values
-                          .map((option) => DropdownMenuItem<SortOption>(
-                                value: option,
-                                child: Text(option.toString().split('.').last),
-                              ))
-                          .toList(),
-                    ),
-                  ],
-                ),
-              ],
-                        ),
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  DropdownButton<String>(
+                    value: selectedLocation,
+                    onChanged: (String? newValue) {
+                      setState(() {
+                        selectedLocation = newValue!;
+                      });
+                    },
+                    items:
+                        locations.map<DropdownMenuItem<String>>((String value) {
+                      return DropdownMenuItem<String>(
+                        value: value,
+                        child: Text(value),
+                      );
+                    }).toList(),
+                  ),
+                  Row(
+                    children: [
+                      const Text('Sort By: '),
+                      DropdownButton<SortOption>(
+                        value: selectedSortOption,
+                        onChanged: (SortOption? newValue) {
+                          setState(() {
+                            selectedSortOption = newValue!;
+                          });
+                        },
+                        items: SortOption.values
+                            .map((option) => DropdownMenuItem<SortOption>(
+                                  value: option,
+                                  child:
+                                      Text(option.toString().split('.').last),
+                                ))
+                            .toList(),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
             ),
             Expanded(
               child: StreamBuilder<QuerySnapshot>(
@@ -141,31 +144,65 @@ class _PropertyListingState extends State<PropertyListing> {
           ],
         ),
       ),
-      floatingActionButton: FutureBuilder<UserDto?>(
-        future: userInfoFuture,
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting ||
-              snapshot.data == null ||
-              snapshot.data!.role != 'Landlord') {
-            // Hide the floating action button while waiting for user info
-            return const SizedBox.shrink();
-          } else {
-            // User info is available, show the floating action button
-            return FloatingActionButton(
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => AddProperty(userInfo: snapshot.data!),
-                  ),
+      floatingActionButton: Column(
+        mainAxisAlignment: MainAxisAlignment.end,
+        children: [
+          FutureBuilder<UserDto?>(
+            future: userInfoFuture,
+            builder: (context, snapshot) {
+              if (snapshot.connectionState == ConnectionState.waiting ||
+                  snapshot.data == null ||
+                  snapshot.data!.role != 'Landlord') {
+                // Hide the floating action button while waiting for user info
+                return const SizedBox.shrink();
+              } else {
+                // User info is available, show the floating action button
+                return FloatingActionButton(
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) =>
+                            AddProperty(userInfo: snapshot.data!),
+                      ),
+                    );
+                  },
+                  backgroundColor: Colors.redAccent,
+                  foregroundColor: Colors.white,
+                  child: const Icon(Icons.add),
                 );
-              },
-              backgroundColor: Colors.redAccent,
-              foregroundColor: Colors.white,
-              child: const Icon(Icons.add),
-            );
-          }
-        },
+              }
+            },
+          ),
+          SizedBox(height: 16), // Adjust the spacing as needed
+          FutureBuilder<UserDto?>(
+            future: userInfoFuture,
+            builder: (context, snapshot) {
+              if (snapshot.connectionState == ConnectionState.waiting ||
+                  snapshot.data == null ||
+                  snapshot.data!.role != 'Landlord') {
+                // Hide the floating action button while waiting for user info
+                return const SizedBox.shrink();
+              } else {
+                // User info is available, show the floating action button
+                return FloatingActionButton(
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) =>
+                            UnverifiedProperties(user: snapshot.data!),
+                      ),
+                    );
+                  },
+                  backgroundColor: Colors.redAccent,
+                  foregroundColor: Colors.white,
+                  child: const Icon(Icons.home_filled),
+                );
+              }
+            },
+          ),
+        ],
       ),
     );
   }
