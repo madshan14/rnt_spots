@@ -197,6 +197,9 @@ class _AddPropertyState extends State<AddProperty> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      appBar: AppBar(
+        title: const Text("Add Property"),
+      ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Form(

@@ -33,7 +33,11 @@ class _InboxState extends State<Inbox> {
           .map((doc) {
         final messageId = doc.id;
         final members = doc['members'] as List<dynamic>;
+        final names = doc['names'] as List<dynamic>;
 
+        // Determine the index of the current user's email in the members list
+        final index = members.indexOf(email);
+        final displayName = names[index == 0 ? 0 : 1];
         // Exclude the current user's email from the list of members
         final filteredMembers =
             members.cast<String>().where((member) => member != email).toList();
@@ -41,6 +45,7 @@ class _InboxState extends State<Inbox> {
         return GroupMessage(
           id: messageId,
           members: filteredMembers,
+          displayName: displayName,
         );
       }).toList();
     });
@@ -65,9 +70,9 @@ class _InboxState extends State<Inbox> {
               itemCount: groupMessages.length,
               itemBuilder: (context, index) {
                 final message = groupMessages[index];
-                final member = message.members[0];
+                final displayName = message.displayName;
                 return ListTile(
-                  title: Text('Conversation with $member'),
+                  title: Text('Conversation with $displayName.'),
                   onTap: () {
                     Navigator.push(
                       context,
@@ -92,9 +97,11 @@ class _InboxState extends State<Inbox> {
 class GroupMessage {
   final String id;
   final List<String> members;
+  final String displayName;
 
   GroupMessage({
     required this.id,
     required this.members,
+    required this.displayName,
   });
 }

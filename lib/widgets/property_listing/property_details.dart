@@ -8,7 +8,6 @@ import 'package:intl/intl.dart';
 import 'package:rnt_spots/dtos/property_dto.dart';
 import 'package:rnt_spots/shared/secure_storage.dart';
 import 'package:rnt_spots/widgets/goolgle_map/google_map_view.dart';
-import 'package:rnt_spots/widgets/home/home.dart';
 import 'package:rnt_spots/widgets/inbox/conversation.dart';
 import 'package:rnt_spots/widgets/property_listing/edit_property.dart';
 import 'package:rnt_spots/widgets/ratings/add_ratings.dart';
@@ -27,6 +26,7 @@ class PropertyDetails extends StatefulWidget {
 final storage = SecureStorage();
 
 class _PropertyDetailsState extends State<PropertyDetails> {
+  late String tenantName;
   bool isLandlord = false;
   bool isAdmin = false;
   bool isUser = false;
@@ -37,6 +37,27 @@ class _PropertyDetailsState extends State<PropertyDetails> {
   void initState() {
     super.initState();
     _getUserRole();
+    _getTenantName();
+  }
+
+  Future<void> _getTenantName() async {
+    final storage = SecureStorage();
+    final userEmail = await storage.getFromSecureStorage("email");
+
+    if (userEmail != null) {
+      final userDoc = await FirebaseFirestore.instance
+          .collection('Users')
+          .where('email', isEqualTo: userEmail)
+          .get();
+
+      if (userDoc.docs.isNotEmpty) {
+        setState(() {
+          tenantName = userDoc.docs.first['firstName'] +
+              " " +
+              userDoc.docs.first['lastName'];
+        });
+      }
+    }
   }
 
   void _getUserRole() async {
@@ -51,10 +72,12 @@ class _PropertyDetailsState extends State<PropertyDetails> {
     });
   }
 
-  Future<void> _createNewMessage(BuildContext context, String landlord) async {
+  Future<void> _createNewMessage(BuildContext context, String landlord,
+      String landlordName, String tenantName) async {
     final groupRef =
         await FirebaseFirestore.instance.collection('GroupMessages').add({
-      'members': [user, landlord]
+      'members': [user, landlord],
+      'names': [tenantName, landlordName]
     });
 
     // Navigate to the screen to create a new message
@@ -102,7 +125,8 @@ class _PropertyDetailsState extends State<PropertyDetails> {
             floatingActionButton: isTenant
                 ? FloatingActionButton(
                     onPressed: () {
-                      _createNewMessage(context, widget.property.email);
+                      _createNewMessage(context, widget.property.email,
+                          widget.property.landlord, tenantName);
                     },
                     child: const Icon(Icons.message),
                   )
@@ -217,8 +241,10 @@ class _PropertyDetailsState extends State<PropertyDetails> {
                       paymentMethod = value;
                     },
                   ),
-                  if (paymentMethod != null && paymentMethod != 'Cash') // Check if payment method is not cash
-                  SizedBox(height: 16),
+                  if (paymentMethod != null &&
+                      paymentMethod !=
+                          'Cash') // Check if payment method is not cash
+                    SizedBox(height: 16),
                   ElevatedButton(
                     onPressed: () async {
                       final picker = ImagePicker();
