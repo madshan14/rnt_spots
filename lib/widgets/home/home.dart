@@ -27,26 +27,33 @@ class _HomeState extends State<Home> {
   @override
   void initState() {
     super.initState();
-    _getUserRole();
-    _initializeScreensAdmin();
-    _initializeScreensNonAdmin();
+    _getUserRoleAndInfo();
   }
 
-  void _getUserRole() async {
+  void _getUserRoleAndInfo() async {
     final userRole = await storage.getFromSecureStorage("userRole");
-    final email = await storage.getFromSecureStorage("email");
+    final userInfo = await getUserInfo(); // Fetch user information
+
+    bool isLandlord = userRole == "Landlord";
     setState(() {
       isAdmin = userRole == "Admin";
-      user = email ?? "";
+      user = userInfo?.email; // Assign user email
     });
+
+    if (userRole == 'Admin') {
+      _initializeScreensAdmin();
+    }
+
+    if (isLandlord) {
+      _initializeScreensLandlord();
+    } else {
+      _initializeScreensNonAdmin();
+    }
   }
 
   void _initializeScreensAdmin() {
     _screensAdmin = [
       const PropertyListing(),
-      ReservationScreen(
-        reserveTo: user,
-      ),
       const AccountList(),
       const Account(),
     ];
@@ -57,6 +64,17 @@ class _HomeState extends State<Home> {
       const PropertyListing(),
       ReservationScreen(
         reserveBy: user,
+      ),
+      const Inbox(),
+      const Account(),
+    ];
+  }
+
+  void _initializeScreensLandlord() {
+    _screensNonAdmin = [
+      const PropertyListing(),
+      ReservationScreen(
+        reserveTo: user,
       ),
       const Inbox(),
       const Account(),
@@ -82,11 +100,12 @@ class _HomeState extends State<Home> {
                 color: _selectedIndex == 0 ? Colors.redAccent : Colors.grey),
             label: 'Home',
           ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.workspaces,
-                color: _selectedIndex == 1 ? Colors.redAccent : Colors.grey),
-            label: 'Reservations',
-          ),
+          if (!isAdmin)
+            BottomNavigationBarItem(
+              icon: Icon(Icons.workspaces,
+                  color: _selectedIndex == 1 ? Colors.redAccent : Colors.grey),
+              label: 'Reservations',
+            ),
           if (!isAdmin)
             BottomNavigationBarItem(
               icon: Icon(Icons.message_outlined,
@@ -96,14 +115,21 @@ class _HomeState extends State<Home> {
           if (isAdmin)
             BottomNavigationBarItem(
               icon: Icon(Icons.account_box,
-                  color: _selectedIndex == 2 ? Colors.redAccent : Colors.grey),
+                  color: _selectedIndex == 1 ? Colors.redAccent : Colors.grey),
               label: 'Users',
             ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.account_circle,
-                color: _selectedIndex == 3 ? Colors.redAccent : Colors.grey),
-            label: 'Profile',
-          ),
+          if (isAdmin)
+            BottomNavigationBarItem(
+              icon: Icon(Icons.account_circle,
+                  color: _selectedIndex == 2 ? Colors.redAccent : Colors.grey),
+              label: 'Profile',
+            ),
+          if (!isAdmin)
+            BottomNavigationBarItem(
+              icon: Icon(Icons.account_circle,
+                  color: _selectedIndex == 3 ? Colors.redAccent : Colors.grey),
+              label: 'Profile',
+            ),
         ],
         currentIndex: _selectedIndex,
         selectedItemColor: Colors.redAccent,

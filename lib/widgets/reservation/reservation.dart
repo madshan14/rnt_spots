@@ -36,12 +36,12 @@ class ReservationList extends StatelessWidget {
 
     if (reserveBy != null) {
       reservationQuery =
-          reservationQuery.where('reserveBy', isEqualTo: reserveBy);
+          reservationQuery.where('reservedBy', isEqualTo: reserveBy);
     }
 
     if (reserveTo != null) {
       reservationQuery =
-          reservationQuery.where('reserveTo', isEqualTo: reserveTo);
+          reservationQuery.where('reservedTo', isEqualTo: reserveTo);
     }
 
     return StreamBuilder<QuerySnapshot>(
@@ -69,12 +69,15 @@ class ReservationList extends StatelessWidget {
             final reservationDate = data['reservationDate'];
             final paymentMethod = data['paymentMethod'];
             final status = data['status'];
+            final receiptUrl = data['receiptUrl'];
             // Format the timestamp
             final formattedDate =
                 DateFormat('MMM dd, yyyy').format(reservationDate.toDate());
 
-             void _updateReservationStatus(String newStatus, String propertyId) async {
-              final QuerySnapshot querySnapshot = await FirebaseFirestore.instance
+            void _updateReservationStatus(
+                String newStatus, String propertyId) async {
+              final QuerySnapshot querySnapshot = await FirebaseFirestore
+                  .instance
                   .collection('Reservations')
                   .where('propertyId', isEqualTo: propertyId)
                   .get();
@@ -84,17 +87,36 @@ class ReservationList extends StatelessWidget {
                 FirebaseFirestore.instance
                     .collection('Reservations')
                     .doc(reservationDocId)
-                    .update({'status': newStatus})
-                    .then((value) {
+                    .update({'status': newStatus}).then((value) async {
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
                       content: Text('Reservation status updated to $newStatus'),
                     ),
-                  );
+                  ); // If the new status is "Accepted", update property status to "Reserved"
+                  if (newStatus == 'Accepted') {
+                    await FirebaseFirestore.instance
+                        .collection('Properties')
+                        .doc(propertyId)
+                        .update({'Status': 'Reserved'}).then((value) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text('Property status updated to Reserved'),
+                        ),
+                      );
+                    }).catchError((error) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content:
+                              Text('Failed to update property status: $error'),
+                        ),
+                      );
+                    });
+                  }
                 }).catchError((error) {
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
-                      content: Text('Failed to update reservation status: $error'),
+                      content:
+                          Text('Failed to update reservation status: $error'),
                     ),
                   );
                 });
@@ -111,34 +133,59 @@ class ReservationList extends StatelessWidget {
                   Text('Status: $status'),
                 ],
               ),
-              trailing: status == 'Pending' ? ElevatedButton(
-                onPressed: () {
-                  showDialog(
-                    context: context,
-                    builder: (context) => AlertDialog(
-                      title: Text('Reservation Confirmation'),
-                      content: Text('Accept or reject this reservation?'),
-                      actions: [
-                        TextButton(
-                          onPressed: () {
-                            Navigator.of(context).pop();
-                            _updateReservationStatus('Accepted', propertyId);
-                          },
-                          child: Text('Accept'),
-                        ),
-                        TextButton(
-                          onPressed: () {
-                            Navigator.of(context).pop();
-                            _updateReservationStatus('Rejected', propertyId);
-                          },
-                          child: Text('Reject'),
-                        ),
-                      ],
-                    ),
-                  );
-                },
-                child: Text('Accept/Reject'),
-              ) : null,
+              trailing: status == 'Pending' && reserveTo != null
+                  ? ElevatedButton(
+                      onPressed: () {
+                        showDialog(
+                          context: context,
+                          builder: (context) => AlertDialog(
+                            title: Text('Reservation Confirmation'),
+                            content: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                if (receiptUrl != null && receiptUrl.isNotEmpty)
+                                  Center(
+                                    child: Image.network(
+                                      receiptUrl,
+                                      width: 200,
+                                      height: 200,
+                                      fit: BoxFit.cover,
+                                    ),
+                                  ),
+                                const SizedBox(
+                                  height: 10,
+                                ),
+                                Text('Property ID: $propertyId'),
+                                Text('Reservation Date: $formattedDate'),
+                                Text('Payment Method: $paymentMethod'),
+                                Text('Status: $status'),
+                              ],
+                            ),
+                            actions: [
+                              TextButton(
+                                onPressed: () {
+                                  Navigator.of(context).pop();
+                                  _updateReservationStatus(
+                                      'Accepted', propertyId);
+                                },
+                                child: Text('Accept'),
+                              ),
+                              TextButton(
+                                onPressed: () {
+                                  Navigator.of(context).pop();
+                                  _updateReservationStatus(
+                                      'Rejected', propertyId);
+                                },
+                                child: Text('Reject'),
+                              ),
+                            ],
+                          ),
+                        );
+                      },
+                      child: Text('Accept/Reject'),
+                    )
+                  : null,
             );
           }).toList(),
         );

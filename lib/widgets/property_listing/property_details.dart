@@ -207,7 +207,7 @@ class _PropertyDetailsState extends State<PropertyDetails> {
                       labelText: 'Payment Method',
                       border: OutlineInputBorder(),
                     ),
-                    items: ['GCASH', 'Palawan', 'MLhullier', 'Cebuana']
+                    items: ['GCASH', 'Palawan', 'MLhullier', 'Cebuana', 'Cash']
                         .map((method) => DropdownMenuItem(
                               value: method,
                               child: Text(method),
@@ -217,6 +217,7 @@ class _PropertyDetailsState extends State<PropertyDetails> {
                       paymentMethod = value;
                     },
                   ),
+                  if (paymentMethod != null && paymentMethod != 'Cash') // Check if payment method is not cash
                   SizedBox(height: 16),
                   ElevatedButton(
                     onPressed: () async {
@@ -251,7 +252,7 @@ class _PropertyDetailsState extends State<PropertyDetails> {
                             final reservationData = {
                               'propertyId': property.id,
                               'reservedBy': user,
-                              'reservedTo': widget.property.landlord,
+                              'reservedTo': widget.property.email,
                               'reservationDate': selectedDate,
                               'paymentMethod': paymentMethod,
                               'status': "Pending"
