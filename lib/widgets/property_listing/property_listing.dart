@@ -14,9 +14,12 @@ class PropertyListing extends StatefulWidget {
   State<PropertyListing> createState() => _PropertyListingState();
 }
 
+enum SortOption { Price, Type, Rooms, Location }
+
 class _PropertyListingState extends State<PropertyListing> {
   late Future<UserDto?> userInfoFuture;
   String selectedLocation = 'All'; // Track the selected location
+  late SortOption selectedSortOption;
 
   final List<String> locations = [
     "All",
@@ -32,6 +35,7 @@ class _PropertyListingState extends State<PropertyListing> {
   void initState() {
     super.initState();
     userInfoFuture = getUserInfo();
+    selectedSortOption = SortOption.Price;
   }
 
   @override
@@ -40,19 +44,46 @@ class _PropertyListingState extends State<PropertyListing> {
       body: SafeArea(
         child: Column(
           children: [
-            DropdownButton<String>(
-              value: selectedLocation,
-              onChanged: (String? newValue) {
-                setState(() {
-                  selectedLocation = newValue!;
-                });
-              },
-              items: locations.map<DropdownMenuItem<String>>((String value) {
-                return DropdownMenuItem<String>(
-                  value: value,
-                  child: Text(value),
-                );
-              }).toList(),
+            Padding(
+              padding: const EdgeInsets.all(10.0),
+              child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                DropdownButton<String>(
+                  value: selectedLocation,
+                  onChanged: (String? newValue) {
+                    setState(() {
+                      selectedLocation = newValue!;
+                    });
+                  },
+                  items: locations.map<DropdownMenuItem<String>>((String value) {
+                    return DropdownMenuItem<String>(
+                      value: value,
+                      child: Text(value),
+                    );
+                  }).toList(),
+                ),
+                Row(
+                  children: [
+                    const Text('Sort By: '),
+                    DropdownButton<SortOption>(
+                      value: selectedSortOption,
+                      onChanged: (SortOption? newValue) {
+                        setState(() {
+                          selectedSortOption = newValue!;
+                        });
+                      },
+                      items: SortOption.values
+                          .map((option) => DropdownMenuItem<SortOption>(
+                                value: option,
+                                child: Text(option.toString().split('.').last),
+                              ))
+                          .toList(),
+                    ),
+                  ],
+                ),
+              ],
+                        ),
             ),
             Expanded(
               child: StreamBuilder<QuerySnapshot>(
@@ -64,30 +95,33 @@ class _PropertyListingState extends State<PropertyListing> {
                     return const Center(child: CircularProgressIndicator());
                   } else if (snapshot.hasError) {
                     return Center(child: Text('Error: ${snapshot.error}'));
-                  } else if (snapshot.hasData && snapshot.data!.docs.isNotEmpty) {
+                  } else if (snapshot.hasData &&
+                      snapshot.data!.docs.isNotEmpty) {
                     final List<PropertyDto> propertyList =
                         snapshot.data!.docs.map((doc) {
                       final Map<String, dynamic> data =
                           doc.data() as Map<String, dynamic>;
                       return PropertyDto.fromFirestore(data, doc.id);
                     }).toList();
-        
+
                     // Filter the property list based on user role
                     return FutureBuilder<UserDto?>(
                       future: userInfoFuture,
                       builder: (context, userSnapshot) {
                         if (userSnapshot.connectionState ==
                             ConnectionState.waiting) {
-                          return const Center(child: CircularProgressIndicator());
+                          return const Center(
+                              child: CircularProgressIndicator());
                         } else if (userSnapshot.hasError) {
                           return Center(
                               child: Text('Error: ${userSnapshot.error}'));
                         } else {
                           final isAdmin = userSnapshot.data?.role == 'Admin';
                           final filteredList = propertyList.where((property) =>
-                              (selectedLocation == 'All' || property.barangay == selectedLocation) &&
+                              (selectedLocation == 'All' ||
+                                  property.barangay == selectedLocation) &&
                               (property.verified || isAdmin));
-        
+
                           return ListView.builder(
                             itemCount: filteredList.length,
                             itemBuilder: (context, index) {
