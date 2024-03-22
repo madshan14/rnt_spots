@@ -21,8 +21,10 @@ class _HomeState extends State<Home> {
   int _selectedIndex = 0;
   bool isAdmin = false;
   String? user;
-  late List<Widget> _screensAdmin;
-  late List<Widget> _screensNonAdmin;
+  bool _userRoleRetrieved = false;
+  late List<Widget> _screens = [];
+
+  final GlobalKey<_HomeState> _homeKey = GlobalKey<_HomeState>();
 
   @override
   void initState() {
@@ -30,55 +32,62 @@ class _HomeState extends State<Home> {
     _getUserRoleAndInfo();
   }
 
-  void _getUserRoleAndInfo() async {
+  Future<void> _getUserRoleAndInfo() async {
     final userRole = await storage.getFromSecureStorage("userRole");
     final userInfo = await getUserInfo(); // Fetch user information
 
     bool isLandlord = userRole == "Landlord";
     setState(() {
       isAdmin = userRole == "Admin";
-      user = userInfo?.email; // Assign user email
+      user = userInfo?.email;
+      _userRoleRetrieved = true;
     });
 
-    if (userRole == 'Admin') {
-      _initializeScreensAdmin();
-    }
-
-    if (isLandlord) {
-      _initializeScreensLandlord();
+    if (userRole != 'Admin') {
+      if (isLandlord) {
+        _initializeScreensLandlord();
+      } else {
+        _initializeScreensNonAdmin();
+      }
     } else {
-      _initializeScreensNonAdmin();
+      _initializeScreensAdmin();
     }
   }
 
   void _initializeScreensAdmin() {
-    _screensAdmin = [
-      const PropertyListing(),
-      const AccountList(),
-      const Account(),
-    ];
+    setState(() {
+      _screens = [
+        const PropertyListing(),
+        const AccountList(),
+        const Account(),
+      ];
+    });
   }
 
   void _initializeScreensNonAdmin() {
-    _screensNonAdmin = [
-      const PropertyListing(),
-      ReservationScreen(
-        reserveBy: user,
-      ),
-      const Inbox(),
-      const Account(),
-    ];
+    setState(() {
+      _screens = [
+        const PropertyListing(),
+        ReservationScreen(
+          reserveBy: user,
+        ),
+        const Inbox(),
+        const Account(),
+      ];
+    });
   }
 
   void _initializeScreensLandlord() {
-    _screensNonAdmin = [
-      const PropertyListing(),
-      ReservationScreen(
-        reserveTo: user,
-      ),
-      const Inbox(),
-      const Account(),
-    ];
+    setState(() {
+      _screens = [
+        const PropertyListing(),
+        ReservationScreen(
+          reserveTo: user,
+        ),
+        const Inbox(),
+        const Account(),
+      ];
+    });
   }
 
   void _onItemTapped(int index) {
@@ -89,10 +98,25 @@ class _HomeState extends State<Home> {
 
   @override
   Widget build(BuildContext context) {
-    List<Widget> screensToShow = isAdmin ? _screensAdmin : _screensNonAdmin;
-
     return Scaffold(
-      body: screensToShow[_selectedIndex],
+      key: _homeKey,
+      body: FutureBuilder(
+        future: _getUserRoleAndInfo(), // Execute the future
+        builder: (context, snapshot) {
+          if (!_userRoleRetrieved) {
+            return const Center(
+                child:
+                    CircularProgressIndicator()); // Show loading indicator while fetching data
+          } else if (snapshot.hasError) {
+            return const Text(
+                'Error fetching data'); // Show error message if data fetching fails
+          } else {
+            return _screens.isNotEmpty
+                ? _screens[_selectedIndex] // Show the selected screen
+                : const PlaceholderWidget(text: 'No screen available');
+          }
+        },
+      ),
       bottomNavigationBar: BottomNavigationBar(
         items: <BottomNavigationBarItem>[
           BottomNavigationBarItem(
