@@ -164,8 +164,7 @@ class _AccountState extends State<Account> {
               ],
             ),
           ),
-        if (user.status == 'Unverified' &&
-            user.role != 'Admin') // Check if status is Unverified
+        if (user.status == 'Unverified' && user.role != 'Admin') // Check if status is Unverified
           Center(
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
@@ -224,13 +223,9 @@ class _AccountState extends State<Account> {
 
   void _logout() async {
     await storage.deleteAllFromSecureStorage();
-
-    Navigator.pushAndRemoveUntil(
+    Navigator.pushReplacement(
       context,
-      MaterialPageRoute(
-          builder: (context) =>
-              const Login()), // Replace Login() with your login screen widget
-      (route) => false,
+      MaterialPageRoute(builder: (context) => const Login()),
     );
   }
 

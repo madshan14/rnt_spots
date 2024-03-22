@@ -13,7 +13,7 @@ class ReservationScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Reservations'),
+        title: const Text('Reservations'),
       ),
       body: ReservationList(
         reserveBy: reserveBy,
@@ -34,6 +34,7 @@ class ReservationList extends StatelessWidget {
     Query reservationQuery =
         FirebaseFirestore.instance.collection('Reservations');
 
+    print("Reservation Rebuilding");
     if (reserveBy != null) {
       reservationQuery =
           reservationQuery.where('reservedBy', isEqualTo: reserveBy);
@@ -48,7 +49,7 @@ class ReservationList extends StatelessWidget {
       stream: reservationQuery.snapshots(),
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
-          return Center(
+          return const Center(
             child: CircularProgressIndicator(),
           );
         }
@@ -58,7 +59,7 @@ class ReservationList extends StatelessWidget {
           );
         }
         if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
-          return Center(
+          return const Center(
             child: Text('No reservations found'),
           );
         }
@@ -99,7 +100,7 @@ class ReservationList extends StatelessWidget {
                         .doc(propertyId)
                         .update({'Status': 'Reserved'}).then((value) {
                       ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
+                        const SnackBar(
                           content: Text('Property status updated to Reserved'),
                         ),
                       );
@@ -139,7 +140,7 @@ class ReservationList extends StatelessWidget {
                         showDialog(
                           context: context,
                           builder: (context) => AlertDialog(
-                            title: Text('Reservation Confirmation'),
+                            title: const Text('Reservation Confirmation'),
                             content: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               mainAxisSize: MainAxisSize.min,
@@ -169,7 +170,7 @@ class ReservationList extends StatelessWidget {
                                   _updateReservationStatus(
                                       'Accepted', propertyId);
                                 },
-                                child: Text('Accept'),
+                                child: const Text('Accept'),
                               ),
                               TextButton(
                                 onPressed: () {
@@ -177,13 +178,13 @@ class ReservationList extends StatelessWidget {
                                   _updateReservationStatus(
                                       'Rejected', propertyId);
                                 },
-                                child: Text('Reject'),
+                                child: const Text('Reject'),
                               ),
                             ],
                           ),
                         );
                       },
-                      child: Text('Accept/Reject'),
+                      child: const Text('Accept/Reject'),
                     )
                   : null,
             );

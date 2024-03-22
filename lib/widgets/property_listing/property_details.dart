@@ -74,20 +74,37 @@ class _PropertyDetailsState extends State<PropertyDetails> {
 
   Future<void> _createNewMessage(BuildContext context, String landlord,
       String landlordName, String tenantName) async {
-    final groupRef =
-        await FirebaseFirestore.instance.collection('GroupMessages').add({
-      'members': [user, landlord],
-      'names': [tenantName, landlordName]
-    });
+    final conversationQuery = await FirebaseFirestore.instance
+        .collection('GroupMessages')
+        .where('members', arrayContainsAny: [user, landlord]).get();
 
-    // Navigate to the screen to create a new message
-    Navigator.pop(context); // Close the new message screen
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => ConversationScreen(groupId: groupRef.id),
-      ),
-    );
+    if (conversationQuery.docs.isNotEmpty) {
+      // If conversation exists, navigate to the existing conversation
+      final conversationId = conversationQuery.docs.first.id;
+      Navigator.pop(context); // Close the new message screen
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => ConversationScreen(groupId: conversationId),
+        ),
+      );
+    } else {
+      // If conversation does not exist, create a new conversation
+      final groupRef =
+          await FirebaseFirestore.instance.collection('GroupMessages').add({
+        'members': [user, landlord],
+        'names': [tenantName, landlordName]
+      });
+
+      // Navigate to the screen to create a new message
+      Navigator.pop(context); // Close the new message screen
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => ConversationScreen(groupId: groupRef.id),
+        ),
+      );
+    }
   }
 
   @override
@@ -241,24 +258,29 @@ class _PropertyDetailsState extends State<PropertyDetails> {
                             ))
                         .toList(),
                     onChanged: (value) {
-                      paymentMethod = value;
+                      setState(() {
+                        paymentMethod = value;
+                      });
                     },
                   ),
                   if (paymentMethod != null &&
                       paymentMethod !=
                           'Cash') // Check if payment method is not cash
                     SizedBox(height: 16),
-                  ElevatedButton(
-                    onPressed: () async {
-                      final picker = ImagePicker();
-                      final pickedFile =
-                          await picker.pickImage(source: ImageSource.gallery);
-                      if (pickedFile != null) {
-                        receiptImage = File(pickedFile.path);
-                      }
-                    },
-                    child: Text('Upload Receipt Image'),
-                  ),
+                  if (paymentMethod != null &&
+                      paymentMethod !=
+                          'Cash') // Check if payment method is not cash
+                    ElevatedButton(
+                      onPressed: () async {
+                        final picker = ImagePicker();
+                        final pickedFile =
+                            await picker.pickImage(source: ImageSource.gallery);
+                        if (pickedFile != null) {
+                          receiptImage = File(pickedFile.path);
+                        }
+                      },
+                      child: Text('Upload Receipt Image'),
+                    ),
                 ],
               ),
               actions: [
@@ -272,12 +294,19 @@ class _PropertyDetailsState extends State<PropertyDetails> {
                   onPressed: uploading
                       ? null
                       : () async {
-                          if (paymentMethod != null && receiptImage != null) {
+                          if (paymentMethod != 'Cash' && receiptImage == null) {
+                            ScaffoldMessenger.of(context)
+                                .showSnackBar(const SnackBar(
+                              content: Text('Please upload receipt.'),
+                            ));
+                            return;
+                          }
+                          if (paymentMethod != null) {
                             setState(() {
                               uploading = true;
                             });
 
-                            // Save reservation with payment method and receipt image
+                            // Save reservation with payment method and receipt image if applicable
                             final reservationData = {
                               'propertyId': property.id,
                               'reservedBy': user,
@@ -287,19 +316,21 @@ class _PropertyDetailsState extends State<PropertyDetails> {
                               'status': "Pending"
                             };
 
-                            // Upload receipt image to storage (replace 'receipts' with your storage path)
-                            final storageRef = FirebaseStorage.instance
-                                .ref()
-                                .child('receipts')
-                                .child(
-                                    '${DateTime.now().millisecondsSinceEpoch}.jpg');
-                            final uploadTask =
-                                storageRef.putFile(receiptImage!);
-                            final TaskSnapshot taskSnapshot =
-                                await uploadTask.whenComplete(() => null);
-                            final String downloadUrl =
-                                await taskSnapshot.ref.getDownloadURL();
-                            reservationData['receiptUrl'] = downloadUrl;
+                            if (receiptImage != null) {
+                              // Upload receipt image to storage (replace 'receipts' with your storage path)
+                              final storageRef = FirebaseStorage.instance
+                                  .ref()
+                                  .child('receipts')
+                                  .child(
+                                      '${DateTime.now().millisecondsSinceEpoch}.jpg');
+                              final uploadTask =
+                                  storageRef.putFile(receiptImage!);
+                              final TaskSnapshot taskSnapshot =
+                                  await uploadTask.whenComplete(() => null);
+                              final String downloadUrl =
+                                  await taskSnapshot.ref.getDownloadURL();
+                              reservationData['receiptUrl'] = downloadUrl;
+                            }
 
                             // Save reservation data to Firestore
                             await FirebaseFirestore.instance
@@ -315,8 +346,7 @@ class _PropertyDetailsState extends State<PropertyDetails> {
                           } else {
                             ScaffoldMessenger.of(context)
                                 .showSnackBar(const SnackBar(
-                              content: Text(
-                                  'Please select payment method and upload receipt image.'),
+                              content: Text('Please select a payment method.'),
                             ));
                           }
                         },

@@ -36,8 +36,8 @@ class _InboxState extends State<Inbox> {
         final names = doc['names'] as List<dynamic>;
 
         // Determine the index of the current user's email in the members list
-        final index = members.indexOf(email);
-        final displayName = names[index == 0 ? 0 : 1];
+        final index = members.indexWhere((element) => element != email);
+        final displayName = names[index];
         // Exclude the current user's email from the list of members
         final filteredMembers =
             members.cast<String>().where((member) => member != email).toList();
