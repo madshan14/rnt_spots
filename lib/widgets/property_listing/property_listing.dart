@@ -1,3 +1,5 @@
+import 'dart:ffi';
+
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:rnt_spots/dtos/property_dto.dart';
@@ -17,10 +19,13 @@ class PropertyListing extends StatefulWidget {
 
 enum SortOption { Price, Type, Rooms, Location }
 
+enum HomeType { House, Apartment, BoardingHouse, Dormitories }
+
 class _PropertyListingState extends State<PropertyListing> {
   late Future<UserDto?> userInfoFuture;
   String selectedLocation = 'All'; // Track the selected location
   late SortOption selectedSortOption;
+  HomeType? selectedHomeType;
 
   final List<String> locations = [
     "All",
@@ -31,6 +36,12 @@ class _PropertyListingState extends State<PropertyListing> {
     'Mampang',
     'Talon-Talon'
   ];
+  final List<String> homeTypes = [
+    'House',
+    'Apartment',
+    'Boarding House',
+    'Dormitories'
+  ]; // List of home types
 
   @override
   void initState() {
@@ -50,21 +61,23 @@ class _PropertyListingState extends State<PropertyListing> {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  DropdownButton<String>(
-                    value: selectedLocation,
-                    onChanged: (String? newValue) {
-                      setState(() {
-                        selectedLocation = newValue!;
-                      });
-                    },
-                    items:
-                        locations.map<DropdownMenuItem<String>>((String value) {
-                      return DropdownMenuItem<String>(
-                        value: value,
-                        child: Text(value),
-                      );
-                    }).toList(),
-                  ),
+                  if (selectedHomeType ==
+                      null) // Show location dropdown only if home type is not selected
+                    DropdownButton<String>(
+                      value: selectedLocation,
+                      onChanged: (String? newValue) {
+                        setState(() {
+                          selectedLocation = newValue!;
+                        });
+                      },
+                      items: locations
+                          .map<DropdownMenuItem<String>>((String value) {
+                        return DropdownMenuItem<String>(
+                          value: value,
+                          child: Text(value),
+                        );
+                      }).toList(),
+                    ),
                   Row(
                     children: [
                       const Text('Sort By: '),
@@ -84,6 +97,23 @@ class _PropertyListingState extends State<PropertyListing> {
                             .toList(),
                       ),
                     ],
+                  ),
+                  // Dropdown for selecting home type
+                  DropdownButton<HomeType>(
+                    value: selectedHomeType,
+                    onChanged: (HomeType? newValue) {
+                      setState(() {
+                        selectedHomeType = newValue;
+                        // Reset selected location when home type is selected
+                        selectedLocation = 'All';
+                      });
+                    },
+                    items: HomeType.values
+                        .map((type) => DropdownMenuItem<HomeType>(
+                              value: type,
+                              child: Text(type.toString().split('.').last),
+                            ))
+                        .toList(),
                   ),
                 ],
               ),
@@ -125,13 +155,7 @@ class _PropertyListingState extends State<PropertyListing> {
                                   property.barangay == selectedLocation) &&
                               (property.verified || isAdmin));
 
-                          return ListView.builder(
-                            itemCount: filteredList.length,
-                            itemBuilder: (context, index) {
-                              final property = filteredList.elementAt(index);
-                              return _buildPropertyCard(property);
-                            },
-                          );
+                          return _buildPropertyList(propertyList);
                         }
                       },
                     );
@@ -305,5 +329,43 @@ class _PropertyListingState extends State<PropertyListing> {
         ),
       ),
     );
+  }
+
+  Widget _buildPropertyList(List<PropertyDto> propertyList) {
+    final filteredList =
+        _filterProperties(propertyList); // Apply filtering based on sort option
+    return ListView.builder(
+      itemCount: filteredList.length,
+      itemBuilder: (context, index) {
+        final property = filteredList[index];
+        return _buildPropertyCard(property);
+      },
+    );
+  }
+
+  List<PropertyDto> _filterProperties(List<PropertyDto> propertyList) {
+    switch (selectedSortOption) {
+      case SortOption.Price:
+        // Sort by price range
+        propertyList.sort((a, b) {
+          final priceA = int.tryParse(a.price) ?? 0;
+          final priceB = int.tryParse(b.price) ?? 0;
+          return priceA.compareTo(priceB);
+        });
+        propertyList = propertyList.toList();
+        break;
+      case SortOption.Type:
+        // Sort by property type
+        break;
+      case SortOption.Rooms:
+        // Sort by number of rooms
+        // Implement sorting logic based on number of rooms
+        break;
+      case SortOption.Location:
+        // Sort by location
+        // Implement sorting logic based on location
+        break;
+    }
+    return propertyList; // Return unfiltered list by default
   }
 }
