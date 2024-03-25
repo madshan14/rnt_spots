@@ -17,37 +17,60 @@ class PropertyListing extends StatefulWidget {
   State<PropertyListing> createState() => _PropertyListingState();
 }
 
-enum SortOption { Price, Type, Rooms, Location }
+enum FilterOption { Price, Type, Rooms, Location }
 
 enum HomeType { House, Apartment, BoardingHouse, Dormitories }
 
 class _PropertyListingState extends State<PropertyListing> {
   late Future<UserDto?> userInfoFuture;
   String selectedLocation = 'All'; // Track the selected location
-  late SortOption selectedSortOption;
-  HomeType? selectedHomeType;
+  late FilterOption selectedFilterOption;
+  HomeType? selectedHomeType = HomeType.House;
+  String selectedRoom = "All";
 
   final List<String> locations = [
     "All",
     'Baliwasan',
+    'Camino Nuevo',
+    'Canelar',
+    'Campo Islam',
+    'Rio Hondo',
+    'San Jose Cawa-cawa',
+    'San Jose Gusu',
+    'San Roque',
+    'Santa Barbara',
+    'Santa Catalina',
+    'Santa Maria',
+    'Santo Niño',
+    'Zone I (Poblacion)',
+    'Zone II (Poblacion)',
+    'Zone III (Poblacion)',
+    'Zone IV (Poblacion)',
+    'Divisoria',
+    'Guiwan',
+    'Lunzuran',
+    'Putik',
     'Tetuan',
-    'San Jose',
-    'Sta Catalina',
-    'Mampang',
-    'Talon-Talon'
+    'Tugbungan',
   ];
-  final List<String> homeTypes = [
-    'House',
-    'Apartment',
-    'Boarding House',
-    'Dormitories'
-  ]; // List of home types
 
+  final List<String> rooms = ["All", "1", "2", "3", "4"];
+  late TextEditingController minPriceController;
+  late TextEditingController maxPriceController;
   @override
   void initState() {
     super.initState();
     userInfoFuture = getUserInfo();
-    selectedSortOption = SortOption.Price;
+    selectedFilterOption = FilterOption.Price;
+    minPriceController = TextEditingController();
+    maxPriceController = TextEditingController();
+  }
+
+  @override
+  void dispose() {
+    minPriceController.dispose();
+    maxPriceController.dispose();
+    super.dispose();
   }
 
   @override
@@ -61,8 +84,7 @@ class _PropertyListingState extends State<PropertyListing> {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  if (selectedHomeType ==
-                      null) // Show location dropdown only if home type is not selected
+                  if (selectedFilterOption == FilterOption.Location)
                     DropdownButton<String>(
                       value: selectedLocation,
                       onChanged: (String? newValue) {
@@ -78,18 +100,86 @@ class _PropertyListingState extends State<PropertyListing> {
                         );
                       }).toList(),
                     ),
+                  if (selectedFilterOption == FilterOption.Rooms)
+                    DropdownButton<String>(
+                      value: selectedRoom,
+                      onChanged: (String? newValue) {
+                        setState(() {
+                          selectedRoom = newValue!;
+                        });
+                      },
+                      items:
+                          rooms.map<DropdownMenuItem<String>>((String value) {
+                        return DropdownMenuItem<String>(
+                          value: value,
+                          child: Text(value),
+                        );
+                      }).toList(),
+                    ),
+                  if (selectedFilterOption == FilterOption.Price)
+                    Row(
+                      children: [
+                        SizedBox(
+                          width: 80,
+                          child: TextFormField(
+                            controller: minPriceController,
+                            keyboardType: TextInputType.number,
+                            decoration: InputDecoration(
+                              labelText: 'Min',
+                              border: OutlineInputBorder(),
+                            ),
+                            onChanged: (value) {
+                              setState(() {});
+                            },
+                          ),
+                        ),
+                        SizedBox(width: 10),
+                        SizedBox(
+                          width: 80,
+                          child: TextFormField(
+                            controller: maxPriceController,
+                            keyboardType: TextInputType.number,
+                            decoration: InputDecoration(
+                              labelText: 'Max',
+                              border: OutlineInputBorder(),
+                            ),
+                            onChanged: (value) {
+                              setState(() {});
+                            },
+                          ),
+                        ),
+                      ],
+                    ),
+                  if (selectedFilterOption ==
+                      FilterOption.Type) // Dropdown for selecting home type
+                    DropdownButton<HomeType>(
+                      value: selectedHomeType,
+                      onChanged: (HomeType? newValue) {
+                        setState(() {
+                          selectedHomeType = newValue;
+                          // Reset selected location when home type is selected
+                          selectedLocation = 'All';
+                        });
+                      },
+                      items: HomeType.values
+                          .map((type) => DropdownMenuItem<HomeType>(
+                                value: type,
+                                child: Text(type.toString().split('.').last),
+                              ))
+                          .toList(),
+                    ),
                   Row(
                     children: [
-                      const Text('Sort By: '),
-                      DropdownButton<SortOption>(
-                        value: selectedSortOption,
-                        onChanged: (SortOption? newValue) {
+                      const Text('Filter By: '),
+                      DropdownButton<FilterOption>(
+                        value: selectedFilterOption,
+                        onChanged: (FilterOption? newValue) {
                           setState(() {
-                            selectedSortOption = newValue!;
+                            selectedFilterOption = newValue!;
                           });
                         },
-                        items: SortOption.values
-                            .map((option) => DropdownMenuItem<SortOption>(
+                        items: FilterOption.values
+                            .map((option) => DropdownMenuItem<FilterOption>(
                                   value: option,
                                   child:
                                       Text(option.toString().split('.').last),
@@ -97,23 +187,6 @@ class _PropertyListingState extends State<PropertyListing> {
                             .toList(),
                       ),
                     ],
-                  ),
-                  // Dropdown for selecting home type
-                  DropdownButton<HomeType>(
-                    value: selectedHomeType,
-                    onChanged: (HomeType? newValue) {
-                      setState(() {
-                        selectedHomeType = newValue;
-                        // Reset selected location when home type is selected
-                        selectedLocation = 'All';
-                      });
-                    },
-                    items: HomeType.values
-                        .map((type) => DropdownMenuItem<HomeType>(
-                              value: type,
-                              child: Text(type.toString().split('.').last),
-                            ))
-                        .toList(),
                   ),
                 ],
               ),
@@ -150,12 +223,11 @@ class _PropertyListingState extends State<PropertyListing> {
                               child: Text('Error: ${userSnapshot.error}'));
                         } else {
                           final isAdmin = userSnapshot.data?.role == 'Admin';
-                          final filteredList = propertyList.where((property) =>
-                              (selectedLocation == 'All' ||
-                                  property.barangay == selectedLocation) &&
-                              (property.verified || isAdmin));
+                          List<PropertyDto> verifiedList = propertyList
+                              .where((property) => property.verified || isAdmin)
+                              .toList();
 
-                          return _buildPropertyList(propertyList);
+                          return _buildPropertyList(verifiedList);
                         }
                       },
                     );
@@ -198,7 +270,7 @@ class _PropertyListingState extends State<PropertyListing> {
               }
             },
           ),
-          SizedBox(height: 16), // Adjust the spacing as needed
+          const SizedBox(height: 16), // Adjust the spacing as needed
           FutureBuilder<UserDto?>(
             future: userInfoFuture,
             builder: (context, snapshot) {
@@ -344,26 +416,40 @@ class _PropertyListingState extends State<PropertyListing> {
   }
 
   List<PropertyDto> _filterProperties(List<PropertyDto> propertyList) {
-    switch (selectedSortOption) {
-      case SortOption.Price:
-        // Sort by price range
-        propertyList.sort((a, b) {
-          final priceA = int.tryParse(a.price) ?? 0;
-          final priceB = int.tryParse(b.price) ?? 0;
-          return priceA.compareTo(priceB);
-        });
+    switch (selectedFilterOption) {
+      case FilterOption.Price:
+        final minPrice =
+            double.tryParse(minPriceController.text) ?? double.negativeInfinity;
+        final maxPrice =
+            double.tryParse(maxPriceController.text) ?? double.infinity;
+
+        // Filter by price range
+        propertyList = propertyList.where((property) {
+          final propertyPrice = double.tryParse(property.price) ?? 0;
+          return propertyPrice >= minPrice && propertyPrice <= maxPrice;
+        }).toList();
         propertyList = propertyList.toList();
         break;
-      case SortOption.Type:
-        // Sort by property type
+      case FilterOption.Type:
+        String type = selectedHomeType.toString().split('.').last;
+        type = type == "BoardingHouse" ? "Boarding House" : type;
+        List<PropertyDto> filteredList =
+            propertyList.where((property) => (property.type == type)).toList();
+        propertyList = filteredList;
         break;
-      case SortOption.Rooms:
-        // Sort by number of rooms
-        // Implement sorting logic based on number of rooms
+      case FilterOption.Rooms:
+        List<PropertyDto> filteredList = propertyList
+            .where((property) =>
+                (selectedRoom == 'All' || property.room == selectedRoom))
+            .toList();
+        propertyList = filteredList;
         break;
-      case SortOption.Location:
-        // Sort by location
-        // Implement sorting logic based on location
+      case FilterOption.Location:
+        List<PropertyDto> filteredList = propertyList
+            .where((property) => (selectedLocation == 'All' ||
+                property.barangay == selectedLocation))
+            .toList();
+        propertyList = filteredList;
         break;
     }
     return propertyList; // Return unfiltered list by default
