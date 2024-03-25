@@ -195,10 +195,12 @@ class _LoginState extends State<Login> {
       storage.saveToSecureStorage("email", user.email);
 
       Fluttertoast.showToast(msg: "Successfully Login");
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => const Home()),
-      );
+      setState(() {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => const Home()),
+        );
+      });
     } else {
       // User does not exist
       ErrorDialog.showErrorDialog(context, "User does not exist!");

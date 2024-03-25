@@ -33,8 +33,8 @@ class _HomeState extends State<Home> {
   }
 
   Future<void> _getUserRoleAndInfo() async {
-    final userRole = await storage.getFromSecureStorage("userRole");
     final userInfo = await getUserInfo(); // Fetch user information
+    final userRole = await storage.getFromSecureStorage("userRole");
 
     bool isLandlord = userRole == "Landlord";
     setState(() {
@@ -43,14 +43,15 @@ class _HomeState extends State<Home> {
       _userRoleRetrieved = true;
     });
 
-    if (userRole != 'Admin') {
-      if (isLandlord) {
-        _initializeScreensLandlord();
-      } else {
-        _initializeScreensNonAdmin();
-      }
-    } else {
+    print('userRole is : $userRole');
+    if (isAdmin) {
       _initializeScreensAdmin();
+      return;
+    }
+    if (isLandlord) {
+      _initializeScreensLandlord();
+    } else {
+      _initializeScreensNonAdmin();
     }
   }
 
@@ -98,25 +99,16 @@ class _HomeState extends State<Home> {
 
   @override
   Widget build(BuildContext context) {
+    print('User is Admin: $isAdmin');
     return Scaffold(
       key: _homeKey,
-      body: FutureBuilder(
-        future: _getUserRoleAndInfo(), // Execute the future
-        builder: (context, snapshot) {
-          if (!_userRoleRetrieved) {
-            return const Center(
-                child:
-                    CircularProgressIndicator()); // Show loading indicator while fetching data
-          } else if (snapshot.hasError) {
-            return const Text(
-                'Error fetching data'); // Show error message if data fetching fails
-          } else {
-            return _screens.isNotEmpty
-                ? _screens[_selectedIndex] // Show the selected screen
-                : const PlaceholderWidget(text: 'No screen available');
-          }
-        },
-      ),
+      body: _userRoleRetrieved
+          ? _screens.isNotEmpty
+              ? _screens[_selectedIndex] // Show the selected screen
+              : const PlaceholderWidget(text: 'No screen available')
+          : const Center(
+              child:
+                  CircularProgressIndicator()), // Show loading indicator while fetching data
       bottomNavigationBar: BottomNavigationBar(
         items: <BottomNavigationBarItem>[
           BottomNavigationBarItem(

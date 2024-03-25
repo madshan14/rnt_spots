@@ -40,7 +40,7 @@ class _AccountListState extends State<AccountList> {
           // Filter out admin users
           final List<DocumentSnapshot> nonAdminUserDocs = userDocs
               .where((doc) =>
-                  (doc.data() as Map<String, dynamic>)['role'] != 'Admin')
+                  (doc.data() as Map<String, dynamic>)['role'] == 'Landlord')
               .toList();
           if (nonAdminUserDocs.isEmpty) {
             return Center(
