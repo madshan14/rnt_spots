@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 import 'package:rnt_spots/dtos/users_dto.dart';
+import 'package:rnt_spots/widgets/property_listing/unverified_listing.dart';
 
 class AccountList extends StatefulWidget {
   const AccountList({Key? key}) : super(key: key);
@@ -122,9 +124,22 @@ class UserDetailsDialog extends StatelessWidget {
         ),
         TextButton(
           onPressed: () {
+            _markUserAsRejected(context, user.id);
             Navigator.of(context).pop();
           },
-          child: Text('Close'),
+          child: Text('Reject'),
+        ),
+        TextButton(
+          onPressed: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) =>
+                    UnverifiedProperties(user: user),
+              ),
+            );
+          },
+          child: Text('Listings'),
         ),
       ],
     );
@@ -135,19 +150,20 @@ class UserDetailsDialog extends StatelessWidget {
         .collection('Users')
         .doc(userId)
         .update({'status': 'Verified'}).then((_) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('User marked as verified.'),
-          backgroundColor: Colors.green,
-        ),
-      );
+      Fluttertoast.showToast(msg: "User marked as verified.");
     }).catchError((error) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Error marking user as verified: $error'),
-          backgroundColor: Colors.red,
-        ),
-      );
+      Fluttertoast.showToast(msg: 'Error marking user as verified: $error');
+    });
+  }
+
+  void _markUserAsRejected(BuildContext context, String? userId) {
+    FirebaseFirestore.instance
+        .collection('Users')
+        .doc(userId)
+        .update({'status': 'Unverified'}).then((_) {
+      Fluttertoast.showToast(msg: "User marked as unverified.");
+    }).catchError((error) {
+      Fluttertoast.showToast(msg: 'Error marking user as unverified: $error');
     });
   }
 }
