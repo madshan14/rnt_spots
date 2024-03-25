@@ -71,17 +71,24 @@ class _InboxState extends State<Inbox> {
               itemBuilder: (context, index) {
                 final message = groupMessages[index];
                 final displayName = message.displayName;
-                return ListTile(
-                  title: Text('Conversation with $displayName.'),
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) =>
-                            ConversationScreen(groupId: message.id),
-                      ),
-                    );
-                  },
+                return Container(
+                  margin: EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: Colors
+                        .grey[100], // Set your desired background color here
+                  ),
+                  child: ListTile(
+                    title: Text('$displayName', style: TextStyle(fontSize: 20)),
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) =>
+                              ConversationScreen(groupId: message.id),
+                        ),
+                      );
+                    },
+                  ),
                 );
               },
             );

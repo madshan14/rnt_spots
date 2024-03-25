@@ -105,22 +105,6 @@ class _AccountState extends State<Account> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
-        if (user.imageUrl != null)
-          Container(
-            width: 200, // Set the desired width
-            height: 200, // Set the desired height
-            child: Image.network(
-              user.imageUrl!,
-              loadingBuilder: (context, child, progress) {
-                if (progress == null) return child;
-                return CircularProgressIndicator();
-              },
-              errorBuilder: (context, error, stackTrace) =>
-                  Text('Error loading image'),
-              fit: BoxFit.cover, // Adjust this property according to your needs
-            ),
-          ),
-        SizedBox(height: 10),
         Center(
           child: Text(
             'First Name: ${user.firstName}',
@@ -164,7 +148,8 @@ class _AccountState extends State<Account> {
               ],
             ),
           ),
-        if (user.status == 'Unverified' && user.role != 'Admin') // Check if status is Unverified
+        if (user.status == 'Unverified' &&
+            user.role != 'Admin') // Check if status is Unverified
           Center(
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
