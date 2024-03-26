@@ -72,7 +72,7 @@ class _HomeState extends State<Home> {
           reserveBy: user,
         ),
         const Inbox(),
-        const Account(),
+        Account(onRoleSwitched: _onRoleSwitched),
       ];
     });
   }
@@ -85,7 +85,7 @@ class _HomeState extends State<Home> {
           reserveTo: user,
         ),
         const Inbox(),
-        const Account(),
+        Account(onRoleSwitched: _onRoleSwitched),
       ];
     });
   }
@@ -93,6 +93,13 @@ class _HomeState extends State<Home> {
   void _onItemTapped(int index) {
     setState(() {
       _selectedIndex = index;
+    });
+  }
+
+  void _onRoleSwitched() {
+    setState(() {
+      // Rerender the Home screen after role switch
+      _getUserRoleAndInfo();
     });
   }
 

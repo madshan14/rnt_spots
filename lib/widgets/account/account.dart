@@ -7,7 +7,8 @@ import 'package:rnt_spots/widgets/login/login.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 class Account extends StatefulWidget {
-  const Account({super.key});
+  final VoidCallback? onRoleSwitched;
+  const Account({super.key, this.onRoleSwitched});
 
   @override
   State<Account> createState() => _AccountState();
@@ -228,6 +229,7 @@ class _AccountState extends State<Account> {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('User role updated successfully')),
       );
+      widget.onRoleSwitched!();
     } catch (error) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Failed to update user role')),

@@ -36,7 +36,6 @@ class ReservationList extends StatelessWidget {
     Query reservationQuery =
         FirebaseFirestore.instance.collection('Reservations');
 
-    print("Reservation Rebuilding");
     if (reserveBy != null) {
       reservationQuery =
           reservationQuery.where('reservedBy', isEqualTo: reserveBy);
