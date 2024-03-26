@@ -1,5 +1,3 @@
-import 'dart:ffi';
-
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:rnt_spots/dtos/property_dto.dart';
@@ -223,9 +221,19 @@ class _PropertyListingState extends State<PropertyListing> {
                               child: Text('Error: ${userSnapshot.error}'));
                         } else {
                           final isAdmin = userSnapshot.data?.role == 'Admin';
+                          final isLandlord =
+                              userSnapshot.data?.role == 'Landlord';
+
                           List<PropertyDto> verifiedList = propertyList
                               .where((property) => property.verified || isAdmin)
                               .toList();
+
+                          if (isLandlord) {
+                            verifiedList = verifiedList
+                                .where((property) =>
+                                    property.email == userSnapshot.data?.email)
+                                .toList();
+                          }
 
                           return _buildPropertyList(verifiedList);
                         }

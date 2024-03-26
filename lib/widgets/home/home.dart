@@ -43,7 +43,6 @@ class _HomeState extends State<Home> {
       _userRoleRetrieved = true;
     });
 
-    print('userRole is : $userRole');
     if (isAdmin) {
       _initializeScreensAdmin();
       return;
@@ -99,7 +98,6 @@ class _HomeState extends State<Home> {
 
   @override
   Widget build(BuildContext context) {
-    print('User is Admin: $isAdmin');
     return Scaffold(
       key: _homeKey,
       body: _userRoleRetrieved
