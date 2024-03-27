@@ -142,7 +142,7 @@ class _PropertyDetailsState extends State<PropertyDetails> {
                 ],
               ),
             ),
-            floatingActionButton: isTenant
+            floatingActionButton: isTenant && user != widget.property.email
                 ? FloatingActionButton(
                     onPressed: () {
                       _createNewMessage(context, widget.property.email,
