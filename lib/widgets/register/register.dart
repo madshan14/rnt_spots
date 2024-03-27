@@ -280,6 +280,9 @@ class _RegisterState extends State<Register> {
   }
 
   Future<void> _signUp() async {
+    setState(() {
+      _isLoading = true; // Set isLoading to true when signing up starts
+    });
     if (_imageFile == null) {
       // Show error message if image is not selected
       ScaffoldMessenger.of(context).showSnackBar(
@@ -322,6 +325,11 @@ class _RegisterState extends State<Register> {
       );
     } catch (error) {
       ErrorDialog.showErrorDialog(context, "Registration Error: $error");
+    } finally {
+      setState(() {
+        _isLoading =
+            false; // Reset isLoading to false when sign up process is complete
+      });
     }
   }
 }
