@@ -324,7 +324,8 @@ class _PropertyDetailsState extends State<PropertyDetails> {
                               'startDate': startDate,
                               'endDate': endDate,
                               'paymentMethod': paymentMethod,
-                              'status': "Pending"
+                              'status': "Pending",
+                              'read' : false
                             };
 
                             if (receiptImage != null) {

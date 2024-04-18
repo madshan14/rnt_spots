@@ -74,12 +74,22 @@ class ReservationList extends StatelessWidget {
             final paymentMethod = data['paymentMethod'];
             final status = data['status'];
             final receiptUrl = data['receiptUrl'];
+            final read = data['read'];
             // Format the timestamp
             final formattedStartDate =
                 DateFormat('MMM dd, yyyy').format(startDate.toDate());
             // Format the timestamp
             final formattedEndDate =
                 DateFormat('MMM dd, yyyy').format(endDate.toDate());
+
+            Future<void> _updateReservationReadStatus(
+                DocumentReference reservationRef) async {
+              try {
+                await reservationRef.update({'read': true});
+              } catch (error) {
+                print('Error updating reservation read status: $error');
+              }
+            }
 
             void _updateReservationStatus(
                 String newStatus, String propertyId) async {
@@ -118,8 +128,8 @@ class ReservationList extends StatelessWidget {
                         ),
                       );
                     });
-                  }else{
-                     await FirebaseFirestore.instance
+                  } else {
+                    await FirebaseFirestore.instance
                         .collection('Properties')
                         .doc(propertyId)
                         .update({'Status': 'Available'}).then((value) {
@@ -148,165 +158,177 @@ class ReservationList extends StatelessWidget {
               }
             }
 
-            return ListTile(
-                title: Text('Property ID: $propertyId'),
-                subtitle: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text('Reserve By: $reserveBy'),
-                    Text('Start Date: $formattedStartDate'),
-                    Text('End Date: $formattedEndDate'),
-                    Text('Payment Method: $paymentMethod'),
-                    Text('Status: $status'),
-                  ],
-                ),
-                trailing: reserveTo != null && status == 'Pending'
-                    ? ElevatedButton(
-                        onPressed: () {
-                          showDialog(
-                            context: context,
-                            builder: (context) => AlertDialog(
-                              title: const Text('Reservation Confirmation'),
-                              content: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  if (receiptUrl != null &&
-                                      receiptUrl.isNotEmpty)
-                                    Center(
-                                      child: Image.network(
-                                        receiptUrl,
-                                        width: 200,
-                                        height: 200,
-                                        fit: BoxFit.cover,
+            return Container(
+              decoration: BoxDecoration(
+                color: read
+                    ? Colors.white
+                    : Color.fromARGB(146, 248, 96,
+                        96), // Choose your desired background color
+                borderRadius: BorderRadius.circular(
+                    10), // Optional: Add border radius for rounded corners
+              ),
+              child: ListTile(
+                  title: Text('Property ID: $propertyId'),
+                  subtitle: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text('Reserve By: $reserveBy'),
+                      Text('Start Date: $formattedStartDate'),
+                      Text('End Date: $formattedEndDate'),
+                      Text('Payment Method: $paymentMethod'),
+                      Text('Status: $status'),
+                    ],
+                  ),
+                  trailing: reserveTo != null && status == 'Pending'
+                      ? ElevatedButton(
+                          onPressed: () async {
+                            await _updateReservationReadStatus(
+                                document.reference);
+                            showDialog(
+                              context: context,
+                              builder: (context) => AlertDialog(
+                                title: const Text('Reservation Confirmation'),
+                                content: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    if (receiptUrl != null &&
+                                        receiptUrl.isNotEmpty)
+                                      Center(
+                                        child: Image.network(
+                                          receiptUrl,
+                                          width: 200,
+                                          height: 200,
+                                          fit: BoxFit.cover,
+                                        ),
                                       ),
+                                    const SizedBox(
+                                      height: 10,
                                     ),
-                                  const SizedBox(
-                                    height: 10,
+                                    Text('Property ID: $propertyId'),
+                                    Text('Reserve By: $reserveBy'),
+                                    Text('Start Date: $formattedStartDate'),
+                                    Text('End Date: $formattedEndDate'),
+                                    Text('Payment Method: $paymentMethod'),
+                                    Text('Status: $status'),
+                                  ],
+                                ),
+                                actions: [
+                                  TextButton(
+                                    onPressed: () {
+                                      Navigator.of(context).pop();
+                                      _updateReservationStatus(
+                                          'Accepted', propertyId);
+                                    },
+                                    child: const Text('Accept'),
                                   ),
-                                  Text('Property ID: $propertyId'),
-                                  Text('Reserve By: $reserveBy'),
-                                  Text('Start Date: $formattedStartDate'),
-                                  Text('End Date: $formattedEndDate'),
-                                  Text('Payment Method: $paymentMethod'),
-                                  Text('Status: $status'),
+                                  TextButton(
+                                    onPressed: () {
+                                      Navigator.of(context).pop();
+                                      _updateReservationStatus(
+                                          'Rejected', propertyId);
+                                    },
+                                    child: const Text('Reject'),
+                                  ),
+                                  TextButton(
+                                    onPressed: () async {
+                                      await FirebaseFirestore.instance
+                                          .collection('Properties')
+                                          .doc(propertyId)
+                                          .get()
+                                          .then((propertySnapshot) {
+                                        if (propertySnapshot.exists) {
+                                          final propertyData = propertySnapshot
+                                              .data() as Map<String, dynamic>;
+                                          final property =
+                                              PropertyDto.fromFirestore(
+                                                  propertyData, propertyId);
+
+                                          Navigator.push(
+                                            context,
+                                            MaterialPageRoute(
+                                              builder: (context) =>
+                                                  PropertyDetails(
+                                                      property: property),
+                                            ),
+                                          );
+                                        }
+                                      });
+                                    },
+                                    child: const Text('View Property'),
+                                  ),
                                 ],
                               ),
-                              actions: [
-                                TextButton(
-                                  onPressed: () {
-                                    Navigator.of(context).pop();
-                                    _updateReservationStatus(
-                                        'Accepted', propertyId);
-                                  },
-                                  child: const Text('Accept'),
-                                ),
-                                TextButton(
-                                  onPressed: () {
-                                    Navigator.of(context).pop();
-                                    _updateReservationStatus(
-                                        'Rejected', propertyId);
-                                  },
-                                  child: const Text('Reject'),
-                                ),
-                                TextButton(
-                                  onPressed: () async {
-                                    await FirebaseFirestore.instance
-                                        .collection('Properties')
-                                        .doc(propertyId)
-                                        .get()
-                                        .then((propertySnapshot) {
-                                      if (propertySnapshot.exists) {
-                                        final propertyData = propertySnapshot
-                                            .data() as Map<String, dynamic>;
-                                        final property =
-                                            PropertyDto.fromFirestore(
-                                                propertyData, propertyId);
-
-                                        Navigator.push(
-                                          context,
-                                          MaterialPageRoute(
-                                            builder: (context) =>
-                                                PropertyDetails(
-                                                    property: property),
-                                          ),
-                                        );
-                                      }
-                                    });
-                                  },
-                                  child: const Text('View Property'),
-                                ),
-                              ],
-                            ),
-                          );
-                        },
-                        child: const Text('Accept/Reject'),
-                      )
-                    : ElevatedButton(
-                        onPressed: () {
-                          showDialog(
-                            context: context,
-                            builder: (context) => AlertDialog(
-                              title: const Text('Reservation Confirmation'),
-                              content: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  if (receiptUrl != null &&
-                                      receiptUrl.isNotEmpty)
-                                    Center(
-                                      child: Image.network(
-                                        receiptUrl,
-                                        width: 200,
-                                        height: 200,
-                                        fit: BoxFit.cover,
+                            );
+                          },
+                          child: const Text('Accept/Reject'),
+                        )
+                      : ElevatedButton(
+                          onPressed: () {
+                            showDialog(
+                              context: context,
+                              builder: (context) => AlertDialog(
+                                title: const Text('Reservation Confirmation'),
+                                content: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    if (receiptUrl != null &&
+                                        receiptUrl.isNotEmpty)
+                                      Center(
+                                        child: Image.network(
+                                          receiptUrl,
+                                          width: 200,
+                                          height: 200,
+                                          fit: BoxFit.cover,
+                                        ),
                                       ),
+                                    const SizedBox(
+                                      height: 10,
                                     ),
-                                  const SizedBox(
-                                    height: 10,
+                                    Text('Property ID: $propertyId'),
+                                    Text('Reserve By: $reserveBy'),
+                                    Text('Start Date: $formattedStartDate'),
+                                    Text('End Date: $formattedEndDate'),
+                                    Text('Payment Method: $paymentMethod'),
+                                    Text('Status: $status'),
+                                  ],
+                                ),
+                                actions: [
+                                  TextButton(
+                                    onPressed: () async {
+                                      await FirebaseFirestore.instance
+                                          .collection('Properties')
+                                          .doc(propertyId)
+                                          .get()
+                                          .then((propertySnapshot) {
+                                        if (propertySnapshot.exists) {
+                                          final propertyData = propertySnapshot
+                                              .data() as Map<String, dynamic>;
+                                          final property =
+                                              PropertyDto.fromFirestore(
+                                                  propertyData, propertyId);
+
+                                          Navigator.push(
+                                            context,
+                                            MaterialPageRoute(
+                                              builder: (context) =>
+                                                  PropertyDetails(
+                                                      property: property),
+                                            ),
+                                          );
+                                        }
+                                      });
+                                    },
+                                    child: const Text('View Property'),
                                   ),
-                                  Text('Property ID: $propertyId'),
-                                  Text('Reserve By: $reserveBy'),
-                                  Text('Start Date: $formattedStartDate'),
-                                  Text('End Date: $formattedEndDate'),
-                                  Text('Payment Method: $paymentMethod'),
-                                  Text('Status: $status'),
                                 ],
                               ),
-                              actions: [
-                                TextButton(
-                                  onPressed: () async {
-                                    await FirebaseFirestore.instance
-                                        .collection('Properties')
-                                        .doc(propertyId)
-                                        .get()
-                                        .then((propertySnapshot) {
-                                      if (propertySnapshot.exists) {
-                                        final propertyData = propertySnapshot
-                                            .data() as Map<String, dynamic>;
-                                        final property =
-                                            PropertyDto.fromFirestore(
-                                                propertyData, propertyId);
-
-                                        Navigator.push(
-                                          context,
-                                          MaterialPageRoute(
-                                            builder: (context) =>
-                                                PropertyDetails(
-                                                    property: property),
-                                          ),
-                                        );
-                                      }
-                                    });
-                                  },
-                                  child: const Text('View Property'),
-                                ),
-                              ],
-                            ),
-                          );
-                        },
-                        child: const Text('View'),
-                      ));
+                            );
+                          },
+                          child: const Text('View'),
+                        )),
+            );
           }).toList(),
         );
       },
