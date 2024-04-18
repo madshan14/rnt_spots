@@ -76,7 +76,7 @@ class _PropertyDetailsState extends State<PropertyDetails> {
       String landlordName, String tenantName) async {
     final conversationQuery = await FirebaseFirestore.instance
         .collection('GroupMessages')
-        .where('members', arrayContainsAny: [user, landlord]).get();
+        .where('members', arrayContains: [user, landlord]).get();
 
     if (conversationQuery.docs.isNotEmpty) {
       // If conversation exists, navigate to the existing conversation
@@ -85,7 +85,7 @@ class _PropertyDetailsState extends State<PropertyDetails> {
       Navigator.push(
         context,
         MaterialPageRoute(
-          builder: (context) => ConversationScreen(groupId: conversationId),
+          builder: (context) => ConversationScreen(groupId: conversationId, index: 0,),
         ),
       );
     } else {
@@ -93,7 +93,8 @@ class _PropertyDetailsState extends State<PropertyDetails> {
       final groupRef =
           await FirebaseFirestore.instance.collection('GroupMessages').add({
         'members': [user, landlord],
-        'names': [tenantName, landlordName]
+        'names': [tenantName, landlordName],
+        'read': [false, false]
       });
 
       // Navigate to the screen to create a new message
@@ -101,7 +102,7 @@ class _PropertyDetailsState extends State<PropertyDetails> {
       Navigator.push(
         context,
         MaterialPageRoute(
-          builder: (context) => ConversationScreen(groupId: groupRef.id),
+          builder: (context) => ConversationScreen(groupId: groupRef.id, index: 0,),
         ),
       );
     }

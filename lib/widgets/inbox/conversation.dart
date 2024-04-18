@@ -1,4 +1,3 @@
-
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
@@ -7,8 +6,10 @@ import 'package:rnt_spots/widgets/login/login.dart';
 
 class ConversationScreen extends StatelessWidget {
   final String groupId;
+  final int index;
 
-  const ConversationScreen({super.key, required this.groupId});
+  const ConversationScreen(
+      {super.key, required this.groupId, required this.index});
 
   Future<void> _sendMessage(String messageText) async {
     final storage = SecureStorage();
@@ -22,10 +23,39 @@ class ConversationScreen extends StatelessWidget {
       'sender': userEmail,
       'timestamp': FieldValue.serverTimestamp()
     });
+    
+    if(index == 0){
+      _updateReadField(1, false);
+    }else{
+    _updateReadField(0, false);
+    }
+  }
+
+  Future<void> _updateReadField(int index, bool condition) async {
+    await FirebaseFirestore.instance.runTransaction((transaction) async {
+      final docSnapshot = await transaction.get(
+          FirebaseFirestore.instance.collection('GroupMessages').doc(groupId));
+      if (!docSnapshot.exists) {
+        throw Exception('Document does not exist!');
+      }
+
+      final readList = docSnapshot.get('read') as List<dynamic>;
+      if (index >= readList.length) {
+        throw Exception('Index out of bounds!');
+      }
+
+      readList[index] = condition;
+
+      transaction.update(
+          FirebaseFirestore.instance.collection('GroupMessages').doc(groupId),
+          {'read': readList});
+    });
   }
 
   @override
   Widget build(BuildContext context) {
+    _updateReadField(index, true);
+
     TextEditingController messageController = TextEditingController();
 
     return Scaffold(

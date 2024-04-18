@@ -34,10 +34,13 @@ class _InboxState extends State<Inbox> {
         final messageId = doc.id;
         final members = doc['members'] as List<dynamic>;
         final names = doc['names'] as List<dynamic>;
+        final read = doc['read'] as List<dynamic>;
 
         // Determine the index of the current user's email in the members list
         final index = members.indexWhere((element) => element != email);
+        final userIndex = members.indexWhere((element) => element == email);
         final displayName = names[index];
+        final readUser = read[userIndex];
         // Exclude the current user's email from the list of members
         final filteredMembers =
             members.cast<String>().where((member) => member != email).toList();
@@ -46,6 +49,8 @@ class _InboxState extends State<Inbox> {
           id: messageId,
           members: filteredMembers,
           displayName: displayName,
+          read: readUser,
+          index: userIndex
         );
       }).toList();
     });
@@ -77,17 +82,28 @@ class _InboxState extends State<Inbox> {
                     color: Colors
                         .grey[100], // Set your desired background color here
                   ),
-                  child: ListTile(
-                    title: Text('$displayName', style: TextStyle(fontSize: 20)),
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) =>
-                              ConversationScreen(groupId: message.id),
-                        ),
-                      );
-                    },
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: message.read
+                          ? Colors.white
+                          : Color.fromARGB(146, 248, 96,
+                              96), // Choose your desired background color
+                      borderRadius: BorderRadius.circular(
+                          10), // Optional: Add border radius for rounded corners
+                    ),
+                    child: ListTile(
+                      title:
+                          Text('$displayName', style: TextStyle(fontSize: 20)),
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) =>
+                                ConversationScreen(groupId: message.id, index: message.index),
+                          ),
+                        );
+                      },
+                    ),
                   ),
                 );
               },
@@ -105,10 +121,15 @@ class GroupMessage {
   final String id;
   final List<String> members;
   final String displayName;
+  final bool read;
+  final int index;
+
 
   GroupMessage({
     required this.id,
     required this.members,
     required this.displayName,
+    required this.read,
+    required this.index
   });
 }

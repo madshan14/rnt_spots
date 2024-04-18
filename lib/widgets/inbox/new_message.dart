@@ -34,7 +34,7 @@ class NewMessageScreen extends StatelessWidget {
                 context,
                 MaterialPageRoute(
                   builder: (context) =>
-                      ConversationScreen(groupId: groupRef.id),
+                      ConversationScreen(groupId: groupRef.id, index: 0,),
                 ),
               );
             },
