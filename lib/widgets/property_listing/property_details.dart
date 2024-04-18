@@ -224,14 +224,23 @@ class _PropertyDetailsState extends State<PropertyDetails> {
 
   Future<void> _confirmReservation(
       BuildContext context, PropertyDto property) async {
-    final DateTime? selectedDate = await showDatePicker(
+    final DateTimeRange? pickedRange = await showDateRangePicker(
       context: context,
-      initialDate: DateTime.now(),
       firstDate: DateTime.now(),
       lastDate: DateTime(2100),
     );
 
-    if (selectedDate != null) {
+    if (pickedRange != null) {
+      final startDate = pickedRange.start;
+      final endDate = pickedRange.end;
+
+      if (endDate == null) {
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+          content: Text('End date selection canceled.'),
+        ));
+        return;
+      }
+
       String? paymentMethod;
       File? receiptImage;
       bool uploading = false;
@@ -310,8 +319,10 @@ class _PropertyDetailsState extends State<PropertyDetails> {
                             final reservationData = {
                               'propertyId': property.id,
                               'reservedBy': user,
+                              'reservedByName': tenantName,
                               'reservedTo': widget.property.email,
-                              'reservationDate': selectedDate,
+                              'startDate': startDate,
+                              'endDate': endDate,
                               'paymentMethod': paymentMethod,
                               'status': "Pending"
                             };

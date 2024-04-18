@@ -68,13 +68,18 @@ class ReservationList extends StatelessWidget {
           children: snapshot.data!.docs.map((DocumentSnapshot document) {
             final data = document.data() as Map<String, dynamic>;
             final propertyId = data['propertyId'];
-            final reservationDate = data['reservationDate'];
+            final startDate = data['startDate'];
+            final endDate = data['endDate'];
+            final reserveBy = data['reservedByName'];
             final paymentMethod = data['paymentMethod'];
             final status = data['status'];
             final receiptUrl = data['receiptUrl'];
             // Format the timestamp
-            final formattedDate =
-                DateFormat('MMM dd, yyyy').format(reservationDate.toDate());
+            final formattedStartDate =
+                DateFormat('MMM dd, yyyy').format(startDate.toDate());
+            // Format the timestamp
+            final formattedEndDate =
+                DateFormat('MMM dd, yyyy').format(endDate.toDate());
 
             void _updateReservationStatus(
                 String newStatus, String propertyId) async {
@@ -130,7 +135,9 @@ class ReservationList extends StatelessWidget {
                 subtitle: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('Reservation Date: $formattedDate'),
+                    Text('Reserve By: $reserveBy'),
+                    Text('Start Date: $formattedStartDate'),
+                    Text('End Date: $formattedEndDate'),
                     Text('Payment Method: $paymentMethod'),
                     Text('Status: $status'),
                   ],
@@ -160,7 +167,9 @@ class ReservationList extends StatelessWidget {
                                     height: 10,
                                   ),
                                   Text('Property ID: $propertyId'),
-                                  Text('Reservation Date: $formattedDate'),
+                                  Text('Reserve By: $reserveBy'),
+                                  Text('Start Date: $formattedStartDate'),
+                                  Text('End Date: $formattedEndDate'),
                                   Text('Payment Method: $paymentMethod'),
                                   Text('Status: $status'),
                                 ],
@@ -239,7 +248,9 @@ class ReservationList extends StatelessWidget {
                                     height: 10,
                                   ),
                                   Text('Property ID: $propertyId'),
-                                  Text('Reservation Date: $formattedDate'),
+                                  Text('Reserve By: $reserveBy'),
+                                  Text('Start Date: $formattedStartDate'),
+                                  Text('End Date: $formattedEndDate'),
                                   Text('Payment Method: $paymentMethod'),
                                   Text('Status: $status'),
                                 ],
