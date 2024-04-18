@@ -32,14 +32,16 @@ class _RegisterState extends State<Register> {
 
   Future<void> _pickImage() async {
     final picker = ImagePicker();
-    final pickedImage = await picker.pickImage(source: ImageSource.gallery);
-    setState(() {
-      if (pickedImage != null) {
-        _imageFile = File(pickedImage.path);
-      } else {
-        print('No image selected.');
-      }
-    });
+    if (selectedRole == 'Landlord') {
+      final pickedImage = await picker.pickImage(source: ImageSource.gallery);
+      setState(() {
+        if (pickedImage != null) {
+          _imageFile = File(pickedImage.path);
+        } else {
+          print('No image selected.');
+        }
+      });
+    }
   }
 
   @override
@@ -189,49 +191,50 @@ class _RegisterState extends State<Register> {
                       )),
                   const SizedBox(height: 8.0),
                   Container(
-                    child: _imageFile == null
-                        ? Container(
-                            decoration: BoxDecoration(
-                              border: Border.all(color: Colors.grey),
-                              borderRadius: BorderRadius.circular(10),
-                            ),
-                            child: SizedBox(
-                              width: double.infinity,
-                              child: TextButton(
-                                onPressed: _pickImage,
-                                child: Text('Tap to select Valid ID'),
-                                style: TextButton.styleFrom(
-                                  padding: EdgeInsets.symmetric(vertical: 16.0),
-                                  primary: Colors.black,
+                      child: _imageFile == null && selectedRole == 'Landlord'
+                          ? Container(
+                              decoration: BoxDecoration(
+                                border: Border.all(color: Colors.grey),
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                              child: SizedBox(
+                                width: double.infinity,
+                                child: TextButton(
+                                  onPressed: _pickImage,
+                                  child: Text('Tap to select Valid ID'),
+                                  style: TextButton.styleFrom(
+                                    padding:
+                                        EdgeInsets.symmetric(vertical: 16.0),
+                                    primary: Colors.black,
+                                  ),
                                 ),
                               ),
+                            )
+                          : null),
+                  if(_imageFile != null && selectedRole == 'Landlord')
+                  Container(
+                    width: double.infinity, // Consume available width
+                    height: 300,
+                    decoration: BoxDecoration(
+                      border: Border.all(color: Colors.grey),
+                    ),
+                    child: ClipRRect(
+                      // Border radius
+                      child: _imageFile != null
+                          ? Image.file(
+                              _imageFile!,
+                              fit: BoxFit.fill,
+                            )
+                          : SizedBox(
+                              // Adjust height as needed
+                              child: Icon(
+                                Icons.camera_alt,
+                                size: 20,
+                                color: Colors.grey[700],
+                              ),
                             ),
-                          )
-                        : Container(
-                            width: double.infinity, // Consume available width
-                            height: 300,
-                            decoration: BoxDecoration(
-                              border: Border.all(color: Colors.grey),
-                            ),
-                            child: ClipRRect(
-                              // Border radius
-                              child: _imageFile != null
-                                  ? Image.file(
-                                      _imageFile!,
-                                      fit: BoxFit.fill,
-                                    )
-                                  : SizedBox(
-                                      // Adjust height as needed
-                                      child: Icon(
-                                        Icons.camera_alt,
-                                        size: 20,
-                                        color: Colors.grey[700],
-                                      ),
-                                    ),
-                            ),
-                          ),
+                    ),
                   ),
-
                   const SizedBox(height: 24.0),
                   // Sign-up button
                   ElevatedButton(
@@ -283,7 +286,7 @@ class _RegisterState extends State<Register> {
     setState(() {
       _isLoading = true; // Set isLoading to true when signing up starts
     });
-    if (_imageFile == null) {
+    if (_imageFile == null && selectedRole == 'Landlord') {
       // Show error message if image is not selected
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(

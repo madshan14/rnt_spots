@@ -165,22 +165,22 @@ class _AccountState extends State<Account> {
             ),
           ),
         if (user.role != 'Admin') const SizedBox(height: 10),
-        if (user.role != "Admin")
-          ElevatedButton(
-            onPressed: () {
-              _editRole(user);
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.grey,
-            ),
-            child: const Padding(
-              padding: EdgeInsets.all(8.0),
-              child: Text(
-                'Switch Role',
-                style: TextStyle(fontSize: 18, color: Colors.white),
-              ),
-            ),
-          ),
+        // if (user.role != "Admin")
+        //   ElevatedButton(
+        //     onPressed: () {
+        //       _editRole(user);
+        //     },
+        //     style: ElevatedButton.styleFrom(
+        //       backgroundColor: Colors.grey,
+        //     ),
+        //     child: const Padding(
+        //       padding: EdgeInsets.all(8.0),
+        //       child: Text(
+        //         'Switch Role',
+        //         style: TextStyle(fontSize: 18, color: Colors.white),
+        //       ),
+        //     ),
+        //   ),
       ],
     );
   }
