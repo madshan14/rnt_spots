@@ -60,18 +60,32 @@ class _AccountListState extends State<AccountList> {
                 role: userData['role'],
                 balance: userData['Balance'] ?? 0,
                 imageUrl: userData['imageUrl'],
+                status: userData['status'],
               );
-              return ListTile(
-                title: Text('${user.firstName} ${user.lastName}'),
-                subtitle: Text(user.email),
-                onTap: () {
-                  showDialog(
-                    context: context,
-                    builder: (BuildContext context) {
-                      return UserDetailsDialog(user: user);
+              return Padding(
+                padding: const EdgeInsets.only(bottom: 8.0),
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: user.status == 'Verified'
+                        ? Colors.white
+                        : Color.fromARGB(146, 248, 96,
+                            96), // Choose your desired background color
+                    borderRadius: BorderRadius.circular(
+                        10), // Optional: Add border radius for rounded corners
+                  ),
+                  child: ListTile(
+                    title: Text('${user.firstName} ${user.lastName}'),
+                    subtitle: Text(user.email),
+                    onTap: () {
+                      showDialog(
+                        context: context,
+                        builder: (BuildContext context) {
+                          return UserDetailsDialog(user: user);
+                        },
+                      );
                     },
-                  );
-                },
+                  ),
+                ),
               );
             },
           );
@@ -134,8 +148,7 @@ class UserDetailsDialog extends StatelessWidget {
             Navigator.push(
               context,
               MaterialPageRoute(
-                builder: (context) =>
-                    UnverifiedProperties(user: user),
+                builder: (context) => UnverifiedProperties(user: user),
               ),
             );
           },

@@ -291,6 +291,10 @@ class _RegisterState extends State<Register> {
           backgroundColor: Colors.red,
         ),
       );
+
+      setState(() {
+        _isLoading = false; // Reset isLoading to false
+      });
       return;
     }
     final newUser = UserDto(
@@ -303,6 +307,26 @@ class _RegisterState extends State<Register> {
     );
 
     try {
+      // Check if the email already exists in Firestore
+      final querySnapshot = await FirebaseFirestore.instance
+          .collection('Users')
+          .where('email', isEqualTo: newUser.email)
+          .get();
+
+      if (querySnapshot.docs.isNotEmpty) {
+        // If email exists, show error message and return
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content:
+                Text('Email already exists. Please use a different email.'),
+            backgroundColor: Colors.red,
+          ),
+        );
+        setState(() {
+          _isLoading = false; // Reset isLoading to false
+        });
+        return;
+      }
       // Upload image to Firebase Storage
       final ref = firebase_storage.FirebaseStorage.instance
           .ref()
