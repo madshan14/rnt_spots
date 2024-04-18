@@ -134,7 +134,7 @@ class _PropertyDetailsState extends State<PropertyDetails> {
                 children: [
                   Hero(
                     tag: 'property_image_${widget.property.id}',
-                    child: _buildImageSlider(widget.property),
+                    child: _buildImageSlider(widget.property, property.status),
                   ),
                   _buildDetails(property),
                   _buildViewOnMapButton(property),
@@ -175,7 +175,7 @@ class _PropertyDetailsState extends State<PropertyDetails> {
     );
   }
 
-  Widget _buildImageSlider(PropertyDto property) {
+  Widget _buildImageSlider(PropertyDto property, String status) {
     return Column(
       children: [
         SizedBox(
@@ -202,7 +202,7 @@ class _PropertyDetailsState extends State<PropertyDetails> {
             ),
           ),
         ),
-        if (widget.property.status != 'Reserved' && !isLandlord && !isAdmin)
+        if (status == 'Available'  && !isLandlord && !isAdmin)
           Padding(
             padding: const EdgeInsets.all(16.0),
             child: ElevatedButton(
@@ -348,6 +348,24 @@ class _PropertyDetailsState extends State<PropertyDetails> {
                                 .collection('Reservations')
                                 .add(reservationData);
 
+                            // Update property status to "Pending"
+                            await FirebaseFirestore.instance
+                                .runTransaction((transaction) async {
+                              final propertyDoc = FirebaseFirestore.instance
+                                  .collection('Properties')
+                                  .doc(property.id);
+
+                              final snapshot =
+                                  await transaction.get(propertyDoc);
+
+                              if (!snapshot.exists) {
+                                throw Exception("Property does not exist!");
+                              }
+
+                              final propertyData = snapshot.data()!;
+                              propertyData['Status'] = 'Pending';
+                              transaction.update(propertyDoc, propertyData);
+                            });
                             // Show confirmation message
                             Navigator.pop(context); // Close the dialog
                             ScaffoldMessenger.of(context)

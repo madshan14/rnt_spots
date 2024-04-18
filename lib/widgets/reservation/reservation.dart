@@ -118,6 +118,24 @@ class ReservationList extends StatelessWidget {
                         ),
                       );
                     });
+                  }else{
+                     await FirebaseFirestore.instance
+                        .collection('Properties')
+                        .doc(propertyId)
+                        .update({'Status': 'Available'}).then((value) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text('Property status updated to Reserved'),
+                        ),
+                      );
+                    }).catchError((error) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content:
+                              Text('Failed to update property status: $error'),
+                        ),
+                      );
+                    });
                   }
                 }).catchError((error) {
                   ScaffoldMessenger.of(context).showSnackBar(
@@ -142,7 +160,7 @@ class ReservationList extends StatelessWidget {
                     Text('Status: $status'),
                   ],
                 ),
-                trailing: reserveTo != null
+                trailing: reserveTo != null && status == 'Pending'
                     ? ElevatedButton(
                         onPressed: () {
                           showDialog(
