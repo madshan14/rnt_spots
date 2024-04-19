@@ -71,6 +71,7 @@ class ReservationList extends StatelessWidget {
             final startDate = data['startDate'];
             final endDate = data['endDate'];
             final reserveBy = data['reservedByName'];
+            final bookedDate = data['bookedDate'];
             final paymentMethod = data['paymentMethod'];
             final status = data['status'];
             final receiptUrl = data['receiptUrl'];
@@ -81,6 +82,17 @@ class ReservationList extends StatelessWidget {
             // Format the timestamp
             final formattedEndDate =
                 DateFormat('MMM dd, yyyy').format(endDate.toDate());
+
+            // Format the bookedDate
+            final formattedBookedDate =
+                DateFormat('MMMM dd, yyyy h:mm a').format(bookedDate.toDate());
+
+            // Calculate the difference between bookedDate and current date
+            final difference = bookedDate.toDate().difference(DateTime.now());
+            final daysDifference = difference.inDays;
+
+            // Check if the difference is less than 7 days
+            final canCancel = daysDifference < 7;
 
             Future<void> _updateReservationReadStatus(
                 DocumentReference reservationRef) async {
@@ -173,6 +185,7 @@ class ReservationList extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text('Reserve By: $reserveBy'),
+                      Text('Reserve Date: $formattedBookedDate'),
                       Text('Start Date: $formattedStartDate'),
                       Text('End Date: $formattedEndDate'),
                       Text('Payment Method: $paymentMethod'),
@@ -207,6 +220,7 @@ class ReservationList extends StatelessWidget {
                                     ),
                                     Text('Property ID: $propertyId'),
                                     Text('Reserve By: $reserveBy'),
+                                    Text('Reserve Date: $formattedBookedDate'),
                                     Text('Start Date: $formattedStartDate'),
                                     Text('End Date: $formattedEndDate'),
                                     Text('Payment Method: $paymentMethod'),
@@ -264,7 +278,11 @@ class ReservationList extends StatelessWidget {
                           child: const Text('Accept/Reject'),
                         )
                       : ElevatedButton(
-                          onPressed: () {
+                          onPressed: () async {
+                            if (reserveTo != null) {
+                              await _updateReservationReadStatus(
+                                  document.reference);
+                            }
                             showDialog(
                               context: context,
                               builder: (context) => AlertDialog(
@@ -288,6 +306,7 @@ class ReservationList extends StatelessWidget {
                                     ),
                                     Text('Property ID: $propertyId'),
                                     Text('Reserve By: $reserveBy'),
+                                    Text('Reserve Date: $formattedBookedDate'),
                                     Text('Start Date: $formattedStartDate'),
                                     Text('End Date: $formattedEndDate'),
                                     Text('Payment Method: $paymentMethod'),
@@ -322,6 +341,14 @@ class ReservationList extends StatelessWidget {
                                     },
                                     child: const Text('View Property'),
                                   ),
+                                  if (canCancel && status != "Cancelled")
+                                    TextButton(
+                                      onPressed: () {
+                                        _updateReservationStatus(
+                                            "Cancelled", propertyId);
+                                      },
+                                      child: const Text('Cancel Reservation'),
+                                    ),
                                 ],
                               ),
                             );

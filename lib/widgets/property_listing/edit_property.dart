@@ -30,6 +30,8 @@ class _EditPropertyState extends State<EditProperty> {
       TextEditingController(); // New controller for width
   final TextEditingController lengthController = TextEditingController();
   final TextEditingController roomController = TextEditingController();
+  final TextEditingController notesController = TextEditingController();
+  final TextEditingController nameController = TextEditingController();
 
   final _formKey = GlobalKey<FormState>();
 
@@ -106,6 +108,8 @@ class _EditPropertyState extends State<EditProperty> {
     widthController.text = property.width.toString();
     lengthController.text = property.length.toString();
     roomController.text = property.room.toString();
+    notesController.text = property.notes.toString();
+    nameController.text = property.name.toString();
     _selectedStatus = property.status;
     _selectedBarangay = property.barangay;
     _selectedHomeType = property.type;
@@ -207,6 +211,18 @@ class _EditPropertyState extends State<EditProperty> {
                 }).toList(),
               ),
               const SizedBox(height: 20),
+              TextFormField(
+                controller: nameController,
+                keyboardType: TextInputType.text,
+                decoration: _textFieldDecoration('Unit Name'),
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return 'Please enter Unit Name';
+                  }
+                  return null;
+                },
+              ),
+              const SizedBox(height: 10),
               TextFormField(
                 controller: addressController,
                 keyboardType: TextInputType.text,
@@ -341,6 +357,13 @@ class _EditPropertyState extends State<EditProperty> {
                   return null;
                 },
               ),
+              const SizedBox(height: 10),
+              TextFormField(
+                controller: notesController,
+                keyboardType: TextInputType.text,
+                maxLines: 5, // Allow multiple lines for notes
+                decoration: _textFieldDecoration('Notes'),
+              ),
               const SizedBox(height: 20),
               ElevatedButton(
                 onPressed: _isLoading ? null : _pickImages,
@@ -416,6 +439,7 @@ class _EditPropertyState extends State<EditProperty> {
         // Create property data with image URLs
         final propertyData = {
           'Landlord': landlord,
+          'Name': nameController.text,
           'Address': addressController.text,
           'Room': roomController.text,
           'Latitude': double.tryParse(latitudeController.text) ?? 0.0,
@@ -429,6 +453,7 @@ class _EditPropertyState extends State<EditProperty> {
           'Length': double.tryParse(lengthController.text) ?? 0.0,
           'Images': imageUrls,
           'Date': DateTime.now().toIso8601String(),
+          'Notes': notesController.text
         };
 
         // Update property data in Firestore

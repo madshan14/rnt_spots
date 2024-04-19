@@ -85,7 +85,10 @@ class _PropertyDetailsState extends State<PropertyDetails> {
       Navigator.push(
         context,
         MaterialPageRoute(
-          builder: (context) => ConversationScreen(groupId: conversationId, index: 0,),
+          builder: (context) => ConversationScreen(
+            groupId: conversationId,
+            index: 0,
+          ),
         ),
       );
     } else {
@@ -102,7 +105,10 @@ class _PropertyDetailsState extends State<PropertyDetails> {
       Navigator.push(
         context,
         MaterialPageRoute(
-          builder: (context) => ConversationScreen(groupId: groupRef.id, index: 0,),
+          builder: (context) => ConversationScreen(
+            groupId: groupRef.id,
+            index: 0,
+          ),
         ),
       );
     }
@@ -203,7 +209,7 @@ class _PropertyDetailsState extends State<PropertyDetails> {
             ),
           ),
         ),
-        if (status == 'Available'  && !isLandlord && !isAdmin)
+        if (status == 'Available' && !isLandlord && !isAdmin)
           Padding(
             padding: const EdgeInsets.all(16.0),
             child: ElevatedButton(
@@ -234,6 +240,7 @@ class _PropertyDetailsState extends State<PropertyDetails> {
     if (pickedRange != null) {
       final startDate = pickedRange.start;
       final endDate = pickedRange.end;
+      final bookedDate = DateTime.now();
 
       if (endDate == null) {
         ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
@@ -324,9 +331,10 @@ class _PropertyDetailsState extends State<PropertyDetails> {
                               'reservedTo': widget.property.email,
                               'startDate': startDate,
                               'endDate': endDate,
+                              'bookedDate': bookedDate,
                               'paymentMethod': paymentMethod,
                               'status': "Pending",
-                              'read' : false
+                              'read': false
                             };
 
                             if (receiptImage != null) {
@@ -411,6 +419,14 @@ class _PropertyDetailsState extends State<PropertyDetails> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          Text(
+            'Unit Name: ${property.name}',
+            style: const TextStyle(
+              fontWeight: FontWeight.bold,
+              fontSize: 16.0,
+            ),
+          ),
+          const SizedBox(height: 8.0),
           Row(
             children: [
               Text(
@@ -512,6 +528,32 @@ class _PropertyDetailsState extends State<PropertyDetails> {
               fontWeight: FontWeight.bold,
             ),
           ),
+          Container(
+            width: double.infinity,
+            child: Card(
+                elevation: 4.0,
+                margin: const EdgeInsets.symmetric(vertical: 10.0),
+                child: Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Column(
+                    children: [
+                      Text(
+                        'Notes:',
+                        style: const TextStyle(
+                          fontSize: 16.0,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const SizedBox(height: 8.0),
+                      // Use property.notes or provide a default value if null
+                      Text(
+                        property.notes ?? 'No notes available',
+                        style: const TextStyle(fontSize: 16.0),
+                      ),
+                    ],
+                  ),
+                )),
+          )
         ],
       ),
     );
@@ -633,6 +675,7 @@ class _PropertyDetailsState extends State<PropertyDetails> {
                       final double rating = doc['rating'] as double;
                       final String comment = doc['comment'] as String;
                       final Timestamp timestamp = doc['timestamp'] as Timestamp;
+                      final String commentBy = doc['name'] as String;
                       final DateTime dateTime = timestamp.toDate();
                       final formattedDate =
                           DateFormat.yMMMMd().format(dateTime);
@@ -645,6 +688,12 @@ class _PropertyDetailsState extends State<PropertyDetails> {
                                 'Rating: $rating',
                                 style: const TextStyle(
                                     fontWeight: FontWeight.bold),
+                              ),
+                              const SizedBox(width: 8.0),
+                              Text(
+                                commentBy,
+                                style: const TextStyle(
+                                    fontStyle: FontStyle.normal),
                               ),
                               const SizedBox(width: 8.0),
                               Text(
@@ -674,7 +723,7 @@ class _PropertyDetailsState extends State<PropertyDetails> {
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) => AddRating(propertyId: propertyId),
+        builder: (context) => AddRating(propertyId: propertyId, name: tenantName),
       ),
     );
   }

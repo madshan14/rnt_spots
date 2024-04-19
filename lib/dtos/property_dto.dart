@@ -3,6 +3,7 @@ import 'package:intl/intl.dart';
 class PropertyDto {
   final List<String> imageUrls;
   final String landlord;
+  final String name;
   final String address;
   final String date;
   final String price;
@@ -16,11 +17,13 @@ class PropertyDto {
   final String status;
   final String type;
   final String barangay;
+  final String notes;
   final String id;
 
   PropertyDto({
     required this.imageUrls,
     required this.landlord,
+    required this.name,
     required this.address,
     required this.date,
     required this.price,
@@ -34,6 +37,7 @@ class PropertyDto {
     required this.status,
     required this.type,
     required this.barangay,
+    required this.notes,
     required this.id,
   });
 
@@ -43,6 +47,8 @@ class PropertyDto {
 
     // Ensure that numeric fields are converted to strings
     String landlord = data['Landlord']?.toString() ?? '';
+    String name = data['Name']?.toString() ?? '';
+    String notes = data['Notes']?.toString() ?? '';
     String address = data['Address']?.toString() ?? '';
     String date = data['Date']?.toString() ?? '';
     String price = data['Price']?.toString() ?? '';
@@ -65,6 +71,8 @@ class PropertyDto {
     return PropertyDto(
         imageUrls: imageUrls,
         landlord: landlord,
+        name: name,
+        notes: notes,
         address: address,
         date: formattedDate,
         price: price,

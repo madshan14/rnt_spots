@@ -25,12 +25,11 @@ class _AddPropertyState extends State<AddProperty> {
   final TextEditingController latitudeController = TextEditingController();
   final TextEditingController longitudeController = TextEditingController();
   final TextEditingController priceController = TextEditingController();
-  final TextEditingController widthController =
-      TextEditingController(); 
-  final TextEditingController lengthController =
-      TextEditingController();
-  final TextEditingController roomController =
-      TextEditingController(); 
+  final TextEditingController widthController = TextEditingController();
+  final TextEditingController lengthController = TextEditingController();
+  final TextEditingController roomController = TextEditingController();
+  final TextEditingController notesController = TextEditingController();
+  final TextEditingController nameController = TextEditingController();
 
   final _formKey = GlobalKey<FormState>();
 
@@ -40,7 +39,12 @@ class _AddPropertyState extends State<AddProperty> {
   String _selectedBarangay = "Baliwasan";
   String _selectedHomeType = "House";
 
-  final List<String> homeTypes = ['House', 'Apartment', 'Boarding House', 'Dormitories']; // List of home types
+  final List<String> homeTypes = [
+    'House',
+    'Apartment',
+    'Boarding House',
+    'Dormitories'
+  ]; // List of home types
 
   final List<String> barangays = [
     'Baliwasan',
@@ -154,6 +158,18 @@ class _AddPropertyState extends State<AddProperty> {
               ),
               const SizedBox(height: 20),
               TextFormField(
+                controller: nameController,
+                keyboardType: TextInputType.text,
+                decoration: _textFieldDecoration('Unit Name'),
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return 'Please enter Unit Name';
+                  }
+                  return null;
+                },
+              ),
+              const SizedBox(height: 10),
+              TextFormField(
                 controller: addressController,
                 keyboardType: TextInputType.text,
                 decoration: _textFieldDecoration('Address'),
@@ -236,7 +252,8 @@ class _AddPropertyState extends State<AddProperty> {
                   }
                   return null;
                 },
-              ),const SizedBox(height: 10),
+              ),
+              const SizedBox(height: 10),
               TextFormField(
                 controller: lengthController,
                 keyboardType: TextInputType.number,
@@ -247,7 +264,8 @@ class _AddPropertyState extends State<AddProperty> {
                   }
                   return null;
                 },
-              ),const SizedBox(height: 10),
+              ),
+              const SizedBox(height: 10),
               TextFormField(
                 controller: roomController,
                 keyboardType: TextInputType.number,
@@ -258,6 +276,13 @@ class _AddPropertyState extends State<AddProperty> {
                   }
                   return null;
                 },
+              ),
+              const SizedBox(height: 10),
+              TextFormField(
+                controller: notesController,
+                keyboardType: TextInputType.text,
+                maxLines: 5, // Allow multiple lines for notes
+                decoration: _textFieldDecoration('Notes'),
               ),
               const SizedBox(height: 20),
               ElevatedButton(
@@ -334,6 +359,7 @@ class _AddPropertyState extends State<AddProperty> {
         // Create property data with image URLs
         final propertyData = {
           'Landlord': landlord,
+          'Name': nameController.text,
           'Address': addressController.text,
           'Room': roomController.text,
           'Latitude': double.tryParse(latitudeController.text) ?? 0.0,
@@ -347,7 +373,8 @@ class _AddPropertyState extends State<AddProperty> {
           'Images': imageUrls,
           'Date': DateTime.now().toIso8601String(),
           'Type': _selectedHomeType,
-          'Verified': false
+          'Verified': false,
+          'Notes': notesController.text
         };
 
         // Add property data to Firestore

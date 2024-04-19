@@ -6,8 +6,9 @@ import 'package:flutter_rating_bar/flutter_rating_bar.dart';
 
 class AddRating extends StatefulWidget {
   final String propertyId;
+  final String name;
 
-  const AddRating({super.key, required this.propertyId});
+  const AddRating({super.key, required this.propertyId, required this.name});
 
   @override
   State<AddRating> createState() => _AddRatingState();
@@ -93,6 +94,7 @@ class _AddRatingState extends State<AddRating> {
   void _addRating() async {
     final rating = _ratingValue;
     final comment = _commentController.text.trim();
+    final name = widget.name;
 
     if (rating > 0 && comment.isNotEmpty) {
       try {
@@ -100,6 +102,7 @@ class _AddRatingState extends State<AddRating> {
           'propertyId': widget.propertyId,
           'rating': rating,
           'comment': comment,
+          'name': name,
           'timestamp': Timestamp.now(),
         });
 
