@@ -1,7 +1,11 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:fluttertoast/fluttertoast.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:rnt_spots/dtos/users_dto.dart';
+import 'package:carousel_slider/carousel_slider.dart';
 import 'package:rnt_spots/widgets/property_listing/unverified_listing.dart';
 
 class AccountList extends StatefulWidget {
@@ -60,6 +64,7 @@ class _AccountListState extends State<AccountList> {
                 role: userData['role'],
                 balance: userData['Balance'] ?? 0,
                 imageUrl: userData['imageUrl'],
+                imageUrls: userData['imageUrls'],
                 status: userData['status'],
               );
               return Padding(
@@ -100,6 +105,30 @@ class UserDetailsDialog extends StatelessWidget {
 
   const UserDetailsDialog({required this.user});
 
+  Widget _populateCarouselWithImages() {
+    List<Widget> carouselItems = [];
+    List<String>? imageUrls = user.imageUrls;
+
+    if (imageUrls != null && imageUrls.isNotEmpty) {
+      for (var imageUrl in imageUrls) {
+        carouselItems.add(
+          Image.network(
+            imageUrl,
+            fit: BoxFit.cover,
+          ),
+        );
+      }
+    }
+    return CarouselSlider(
+      options: CarouselOptions(
+        height: 200.0,
+        enableInfiniteScroll: false,
+        enlargeCenterPage: true,
+      ),
+      items: carouselItems,
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
@@ -117,6 +146,8 @@ class UserDetailsDialog extends StatelessWidget {
                 fit: BoxFit.cover,
               ),
             ),
+          const SizedBox(height: 20),
+          _populateCarouselWithImages(),
           const SizedBox(height: 20),
           Text(
             'Email: ${user.email}',

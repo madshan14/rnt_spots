@@ -10,6 +10,7 @@ class UserDto {
   final String? password;
   final String? status;
   String? imageUrl;
+  List<String>? imageUrls;
   final String role;
   final double? balance;
   final DateTime createdAt;
@@ -21,6 +22,7 @@ class UserDto {
       this.password,
       this.status,
       this.imageUrl,
+      List<dynamic>? imageUrls,
       this.id,
       required this.role,
       double? balance,
@@ -37,6 +39,7 @@ class UserDto {
       'status': status,
       'role': role,
       'imageUrl': imageUrl,
+      'imageUrls': imageUrls,
       'Balance': balance,
       'CreatedAt': Timestamp.fromDate(createdAt)
     };
