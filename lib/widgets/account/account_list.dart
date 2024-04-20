@@ -118,46 +118,56 @@ class UserDetailsDialog extends StatelessWidget {
           ),
         );
       }
+      return CarouselSlider(
+        options: CarouselOptions(
+          height: 200.0,
+          enableInfiniteScroll: false,
+          enlargeCenterPage: true,
+        ),
+        items: carouselItems,
+      );
     }
-    return CarouselSlider(
-      options: CarouselOptions(
-        height: 200.0,
-        enableInfiniteScroll: false,
-        enlargeCenterPage: true,
-      ),
-      items: carouselItems,
-    );
+    return SizedBox.shrink();
   }
 
   @override
   Widget build(BuildContext context) {
+    final screenHeight = MediaQuery.of(context).size.height;
+    final screenWidth = MediaQuery.of(context).size.width;
+    final maxHeight = screenHeight * 0.8; // 80% of screen height
+    final maxWidth = screenWidth * 0.8; // 80% of screen width
     return AlertDialog(
       title: Center(child: Text('${user.firstName} ${user.lastName}')),
-      content: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          if (user.imageUrl != null) // Check if imageUrl is available
-            Center(
-              child: Image.network(
-                user.imageUrl!,
-                width: 300,
-                height: 300,
-                fit: BoxFit.cover,
+      content: Container(
+        width: maxWidth,
+        constraints: BoxConstraints(maxHeight: maxHeight),
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              if (user.imageUrl != null) // Check if imageUrl is available
+                Center(
+                  child: Image.network(
+                    user.imageUrl!,
+                    width: 300,
+                    height: 300,
+                    fit: BoxFit.cover,
+                  ),
+                ),
+              const SizedBox(height: 20),
+              _populateCarouselWithImages(),
+              Text(
+                'Email: ${user.email}',
+                style: TextStyle(fontSize: 20),
               ),
-            ),
-          const SizedBox(height: 20),
-          _populateCarouselWithImages(),
-          const SizedBox(height: 20),
-          Text(
-            'Email: ${user.email}',
-            style: TextStyle(fontSize: 20),
+              Text(
+                'Role: ${user.role}',
+                style: TextStyle(fontSize: 20),
+              ),
+            ],
           ),
-          Text(
-            'Role: ${user.role}',
-            style: TextStyle(fontSize: 20),
-          ),
-        ],
+        ),
       ),
       actions: [
         TextButton(

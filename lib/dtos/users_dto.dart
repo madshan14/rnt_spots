@@ -28,7 +28,8 @@ class UserDto {
       double? balance,
       DateTime? createdAt})
       : balance = balance ?? 0.00,
-        createdAt = createdAt ?? DateTime.now();
+        createdAt = createdAt ?? DateTime.now(),
+        imageUrls = imageUrls?.cast<String>();
 
   Map<String, dynamic> toJson() {
     return {
