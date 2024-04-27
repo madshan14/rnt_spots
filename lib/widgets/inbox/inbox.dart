@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:rnt_spots/shared/secure_storage.dart';
 import 'package:rnt_spots/widgets/inbox/conversation.dart';
 import 'package:rnt_spots/widgets/inbox/new_message.dart';
@@ -24,6 +25,7 @@ class _InboxState extends State<Inbox> {
     final storage = SecureStorage();
     return FirebaseFirestore.instance
         .collection('GroupMessages')
+        .orderBy('timeStamp', descending: true)
         .snapshots()
         .asyncMap<List<GroupMessage>>((snapshot) async {
       final email = await storage.getFromSecureStorage("email");
@@ -35,7 +37,10 @@ class _InboxState extends State<Inbox> {
         final members = doc['members'] as List<dynamic>;
         final names = doc['names'] as List<dynamic>;
         final read = doc['read'] as List<dynamic>;
-
+        final timeStamp = doc['timeStamp'] as Timestamp;
+        final formattedDateTime = timeStamp.toDate();
+        final formattedDateTimeString =
+            DateFormat('MMMM dd, yyyy h:mm a').format(formattedDateTime);
         // Determine the index of the current user's email in the members list
         final index = members.indexWhere((element) => element != email);
         final userIndex = members.indexWhere((element) => element == email);
@@ -50,7 +55,8 @@ class _InboxState extends State<Inbox> {
           members: filteredMembers,
           displayName: displayName,
           read: readUser,
-          index: userIndex
+          index: userIndex,
+          timeStamp: formattedDateTimeString,
         );
       }).toList();
     });
@@ -76,6 +82,7 @@ class _InboxState extends State<Inbox> {
               itemBuilder: (context, index) {
                 final message = groupMessages[index];
                 final displayName = message.displayName;
+                final timeStamp = message.timeStamp;
                 return Container(
                   margin: EdgeInsets.all(8),
                   decoration: BoxDecoration(
@@ -92,14 +99,26 @@ class _InboxState extends State<Inbox> {
                           10), // Optional: Add border radius for rounded corners
                     ),
                     child: ListTile(
-                      title:
-                          Text('$displayName', style: TextStyle(fontSize: 20)),
+                      title: Row(
+                        children: [
+                          Text(
+                            '$displayName  ',
+                            style: TextStyle(fontSize: 20),
+                          ),
+                          Text(
+                            '$timeStamp',
+                            style: TextStyle(
+                                fontSize:
+                                    12), // Change the font size as desired
+                          ),
+                        ],
+                      ),
                       onTap: () {
                         Navigator.push(
                           context,
                           MaterialPageRoute(
-                            builder: (context) =>
-                                ConversationScreen(groupId: message.id, index: message.index),
+                            builder: (context) => ConversationScreen(
+                                groupId: message.id, index: message.index),
                           ),
                         );
                       },
@@ -123,13 +142,13 @@ class GroupMessage {
   final String displayName;
   final bool read;
   final int index;
+  final dynamic timeStamp;
 
-
-  GroupMessage({
-    required this.id,
-    required this.members,
-    required this.displayName,
-    required this.read,
-    required this.index
-  });
+  GroupMessage(
+      {required this.id,
+      required this.members,
+      required this.displayName,
+      required this.read,
+      required this.index,
+      required this.timeStamp});
 }

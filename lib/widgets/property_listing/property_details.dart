@@ -99,7 +99,8 @@ class _PropertyDetailsState extends State<PropertyDetails> {
           await FirebaseFirestore.instance.collection('GroupMessages').add({
         'members': [user, landlord],
         'names': [tenantName, landlordName],
-        'read': [false, false]
+        'read': [false, false],
+        'timeStamp': DateTime.now()
       });
 
       // Navigate to the screen to create a new message

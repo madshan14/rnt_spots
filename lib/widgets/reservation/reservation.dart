@@ -46,6 +46,8 @@ class ReservationList extends StatelessWidget {
           reservationQuery.where('reservedTo', isEqualTo: reserveTo);
     }
 
+    // Add orderBy clause to sort by bookedDate in descending order
+    reservationQuery = reservationQuery.orderBy('bookedDate', descending: true);
     return StreamBuilder<QuerySnapshot>(
       stream: reservationQuery.snapshots(),
       builder: (context, snapshot) {
