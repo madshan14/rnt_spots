@@ -38,17 +38,21 @@ class ConversationScreen extends StatelessWidget {
       if (!docSnapshot.exists) {
         throw Exception('Document does not exist!');
       }
-
+      Timestamp timeStamp = docSnapshot.get("timeStamp") as Timestamp;
       final readList = docSnapshot.get('read') as List<dynamic>;
       if (index >= readList.length) {
         throw Exception('Index out of bounds!');
       }
 
       readList[index] = condition;
+      final date = DateTime.now();
 
       transaction.update(
           FirebaseFirestore.instance.collection('GroupMessages').doc(groupId),
           {'read': readList});
+      transaction.update(
+          FirebaseFirestore.instance.collection('GroupMessages').doc(groupId),
+          {'timeStamp': date});
     });
   }
 

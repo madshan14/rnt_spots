@@ -38,9 +38,11 @@ class _InboxState extends State<Inbox> {
         final names = doc['names'] as List<dynamic>;
         final read = doc['read'] as List<dynamic>;
         final timeStamp = doc['timeStamp'] as Timestamp;
-        final formattedDateTime = timeStamp.toDate();
-        final formattedDateTimeString =
-            DateFormat('MMMM dd, yyyy h:mm a').format(formattedDateTime);
+        final localDate = timeStamp.toDate();
+        DateTime utcPlus8Time = localDate.add(Duration(hours: 8));
+        final formatedTime =
+            DateFormat('MMMM dd, yyyy h:mm a', 'en_us').format(utcPlus8Time);
+
         // Determine the index of the current user's email in the members list
         final index = members.indexWhere((element) => element != email);
         final userIndex = members.indexWhere((element) => element == email);
@@ -56,7 +58,7 @@ class _InboxState extends State<Inbox> {
           displayName: displayName,
           read: readUser,
           index: userIndex,
-          timeStamp: formattedDateTimeString,
+          timeStamp: formatedTime,
         );
       }).toList();
     });
@@ -100,6 +102,7 @@ class _InboxState extends State<Inbox> {
                     ),
                     child: ListTile(
                       title: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           Text(
                             '$displayName  ',

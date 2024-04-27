@@ -271,7 +271,7 @@ class _PropertyDetailsState extends State<PropertyDetails> {
                       labelText: 'Payment Method',
                       border: OutlineInputBorder(),
                     ),
-                    items: ['GCASH', 'Palawan', 'MLhullier', 'Cebuana', 'Cash']
+                    items: ['GCASH', 'Palawan', 'MLhullier', 'Cebuana', 'Cash', 'Other']
                         .map((method) => DropdownMenuItem(
                               value: method,
                               child: Text(method),
