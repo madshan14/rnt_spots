@@ -30,6 +30,7 @@ class _AddPropertyState extends State<AddProperty> {
   final TextEditingController roomController = TextEditingController();
   final TextEditingController notesController = TextEditingController();
   final TextEditingController nameController = TextEditingController();
+  final TextEditingController roomCapacityController = TextEditingController();
 
   final _formKey = GlobalKey<FormState>();
 
@@ -276,6 +277,18 @@ class _AddPropertyState extends State<AddProperty> {
                   }
                   return null;
                 },
+              ), 
+              const SizedBox(height: 10),
+              TextFormField(
+                controller: roomCapacityController,
+                keyboardType: TextInputType.number,
+                decoration: _textFieldDecoration('Room Capacity'),
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return 'Please enter Room Capacity';
+                  }
+                  return null;
+                },
               ),
               const SizedBox(height: 10),
               TextFormField(
@@ -362,6 +375,7 @@ class _AddPropertyState extends State<AddProperty> {
           'Name': nameController.text,
           'Address': addressController.text,
           'Room': roomController.text,
+          'RoomCapacity': roomCapacityController.text,
           'Latitude': double.tryParse(latitudeController.text) ?? 0.0,
           'Longitude': double.tryParse(longitudeController.text) ?? 0.0,
           'Status': _selectedStatus,

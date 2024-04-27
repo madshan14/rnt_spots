@@ -10,6 +10,7 @@ class PropertyDto {
   final String email;
   final String width;
   final String room;
+  final String roomCapacity;
   final String length;
   final double latitude;
   final double longitude;
@@ -28,6 +29,7 @@ class PropertyDto {
     required this.date,
     required this.price,
     required this.room,
+    required this.roomCapacity,
     required this.width,
     required this.length,
     required this.email,
@@ -59,6 +61,7 @@ class PropertyDto {
     String width = data['Width']?.toString() ?? '';
     String length = data['Length']?.toString() ?? '';
     String room = data['Room']?.toString() ?? '';
+    String roomCapacity = data['RoomCapacity']?.toString() ?? '';
     bool verified = data['Verified'];
     double latitude = data['Latitude'];
     double longitude = data['Longitude'];
@@ -80,6 +83,7 @@ class PropertyDto {
         length: length,
         email: email,
         room: room,
+        roomCapacity: roomCapacity,
         latitude: latitude,
         longitude: longitude,
         verified: verified,

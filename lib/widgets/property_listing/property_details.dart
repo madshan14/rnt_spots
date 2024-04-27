@@ -1,3 +1,5 @@
+// ignore_for_file: use_build_context_synchronously
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
@@ -258,13 +260,13 @@ class _PropertyDetailsState extends State<PropertyDetails> {
         builder: (context) => StatefulBuilder(
           builder: (context, setState) {
             return AlertDialog(
-              title: Text('Select Payment Method'),
+              title: const Text('Select Payment Method'),
               content: Column(
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   DropdownButtonFormField<String>(
-                    decoration: InputDecoration(
+                    decoration: const InputDecoration(
                       labelText: 'Payment Method',
                       border: OutlineInputBorder(),
                     ),
@@ -283,7 +285,7 @@ class _PropertyDetailsState extends State<PropertyDetails> {
                   if (paymentMethod != null &&
                       paymentMethod !=
                           'Cash') // Check if payment method is not cash
-                    SizedBox(height: 16),
+                    const SizedBox(height: 16),
                   if (paymentMethod != null &&
                       paymentMethod !=
                           'Cash') // Check if payment method is not cash
@@ -296,7 +298,7 @@ class _PropertyDetailsState extends State<PropertyDetails> {
                           receiptImage = File(pickedFile.path);
                         }
                       },
-                      child: Text('Upload Receipt Image'),
+                      child: const Text('Upload Receipt Image'),
                     ),
                 ],
               ),
@@ -305,7 +307,7 @@ class _PropertyDetailsState extends State<PropertyDetails> {
                   onPressed: () {
                     Navigator.pop(context);
                   },
-                  child: Text('Cancel'),
+                  child: const Text('Cancel'),
                 ),
                 ElevatedButton(
                   onPressed: uploading
@@ -390,7 +392,7 @@ class _PropertyDetailsState extends State<PropertyDetails> {
                           }
                         },
                   child: uploading
-                      ? SizedBox(
+                      ? const SizedBox(
                           width: 20,
                           height: 20,
                           child: CircularProgressIndicator(
@@ -398,7 +400,7 @@ class _PropertyDetailsState extends State<PropertyDetails> {
                                 AlwaysStoppedAnimation<Color>(Colors.white),
                           ),
                         )
-                      : Text('Confirm'),
+                      : const Text('Confirm'),
                 ),
               ],
             );
@@ -498,6 +500,14 @@ class _PropertyDetailsState extends State<PropertyDetails> {
           ),
           const SizedBox(height: 8.0),
           Text(
+            'Room Capacity: ${property.roomCapacity}',
+            style: const TextStyle(
+              fontWeight: FontWeight.bold,
+              fontSize: 16.0,
+            ),
+          ),
+          const SizedBox(height: 8.0),
+          Text(
             'Address: ${property.address}',
             style: const TextStyle(
               fontWeight: FontWeight.bold,
@@ -537,9 +547,9 @@ class _PropertyDetailsState extends State<PropertyDetails> {
                   padding: const EdgeInsets.all(16.0),
                   child: Column(
                     children: [
-                      Text(
+                      const Text(
                         'Notes:',
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 16.0,
                           fontWeight: FontWeight.bold,
                         ),

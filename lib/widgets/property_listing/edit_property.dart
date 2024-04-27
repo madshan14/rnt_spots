@@ -32,6 +32,7 @@ class _EditPropertyState extends State<EditProperty> {
   final TextEditingController roomController = TextEditingController();
   final TextEditingController notesController = TextEditingController();
   final TextEditingController nameController = TextEditingController();
+  final TextEditingController roomCapacityController = TextEditingController();
 
   final _formKey = GlobalKey<FormState>();
 
@@ -108,6 +109,7 @@ class _EditPropertyState extends State<EditProperty> {
     widthController.text = property.width.toString();
     lengthController.text = property.length.toString();
     roomController.text = property.room.toString();
+    roomCapacityController.text = property.roomCapacity.toString();
     notesController.text = property.notes.toString();
     nameController.text = property.name.toString();
     _selectedStatus = property.status;
@@ -363,6 +365,18 @@ class _EditPropertyState extends State<EditProperty> {
               ),
               const SizedBox(height: 10),
               TextFormField(
+                controller: roomCapacityController,
+                keyboardType: TextInputType.number,
+                decoration: _textFieldDecoration('Room Capacity'),
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return 'Please enter Room Capacity';
+                  }
+                  return null;
+                },
+              ),
+              const SizedBox(height: 10),
+              TextFormField(
                 controller: notesController,
                 keyboardType: TextInputType.text,
                 maxLines: 5, // Allow multiple lines for notes
@@ -446,6 +460,7 @@ class _EditPropertyState extends State<EditProperty> {
           'Name': nameController.text,
           'Address': addressController.text,
           'Room': roomController.text,
+          'RoomCapacity': roomCapacityController.text,
           'Latitude': double.tryParse(latitudeController.text) ?? 0.0,
           'Longitude': double.tryParse(longitudeController.text) ?? 0.0,
           'Status': _selectedStatus,

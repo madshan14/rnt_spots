@@ -1,3 +1,5 @@
+// ignore_for_file: use_build_context_synchronously
+
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:rnt_spots/dtos/users_dto.dart';
@@ -454,11 +456,38 @@ class _RegisterState extends State<Register> {
       // Add user data to Firestore
       await firestore.collection('Users').add(newUser.toJson());
 
-      Fluttertoast.showToast(msg: "Successfully Registered");
-      _clearFields();
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => const Login()),
+      // Show success dialog
+      if (selectedRole != "Landlord") {
+        Fluttertoast.showToast(msg: "Successfully Registered");
+        _clearFields();
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => const Login()),
+        );
+        return;
+      }
+      showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          return AlertDialog(
+            title: const Text("Successfully Registered"),
+            content: const Text(
+                "To be verified, kindly please wait 3 working days from the day of signing up. Thank you!"),
+            actions: [
+              TextButton(
+                onPressed: () {
+                  Navigator.of(context).pop();
+                  _clearFields();
+                  Navigator.pushReplacement(
+                    context,
+                    MaterialPageRoute(builder: (context) => const Login()),
+                  );
+                },
+                child: Text("OK"),
+              ),
+            ],
+          );
+        },
       );
     } catch (error) {
       ErrorDialog.showErrorDialog(context, "Registration Error: $error");
