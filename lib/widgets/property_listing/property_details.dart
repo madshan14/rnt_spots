@@ -337,6 +337,7 @@ class _PropertyDetailsState extends State<PropertyDetails> {
                               'bookedDate': bookedDate,
                               'paymentMethod': paymentMethod,
                               'status': "Pending",
+                              'price': property.price,
                               'read': false
                             };
 

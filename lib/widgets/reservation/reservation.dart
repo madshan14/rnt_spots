@@ -77,6 +77,7 @@ class ReservationList extends StatelessWidget {
             final paymentMethod = data['paymentMethod'];
             final status = data['status'];
             final receiptUrl = data['receiptUrl'];
+            final price = data['price'];
             final read = data['read'];
             // Format the timestamp
             final formattedStartDate =
@@ -191,6 +192,7 @@ class ReservationList extends StatelessWidget {
                       Text('Start Date: $formattedStartDate'),
                       Text('End Date: $formattedEndDate'),
                       Text('Payment Method: $paymentMethod'),
+                      if (status == "Accepted") Text('Price: $price'),
                       Text('Status: $status'),
                     ],
                   ),
@@ -312,6 +314,7 @@ class ReservationList extends StatelessWidget {
                                     Text('Start Date: $formattedStartDate'),
                                     Text('End Date: $formattedEndDate'),
                                     Text('Payment Method: $paymentMethod'),
+                                    Text('Price: $price'),
                                     Text('Status: $status'),
                                   ],
                                 ),
