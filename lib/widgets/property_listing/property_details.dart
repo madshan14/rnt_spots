@@ -269,6 +269,7 @@ class _PropertyDetailsState extends State<PropertyDetails> {
                   DropdownButtonFormField<String>(
                     decoration: const InputDecoration(
                       labelText: 'Payment Method',
+                      helperText: 'Kindly upload the image of the receipt/reference number',
                       border: OutlineInputBorder(),
                     ),
                     items: ['GCASH', 'Palawan', 'MLhullier', 'Cebuana', 'Cash']
@@ -299,7 +300,7 @@ class _PropertyDetailsState extends State<PropertyDetails> {
                           receiptImage = File(pickedFile.path);
                         }
                       },
-                      child: const Text('Kindly upload the image of the receipt/reference number'),
+                      child: const Text('Upload Receipt Image'),
                     ),
                 ],
               ),
