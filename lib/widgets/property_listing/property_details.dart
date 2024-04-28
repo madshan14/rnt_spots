@@ -299,7 +299,7 @@ class _PropertyDetailsState extends State<PropertyDetails> {
                           receiptImage = File(pickedFile.path);
                         }
                       },
-                      child: const Text('Upload Receipt Image'),
+                      child: const Text('Kindly upload the image of the receipt/reference number'),
                     ),
                 ],
               ),
