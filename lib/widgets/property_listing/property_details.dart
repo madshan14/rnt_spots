@@ -261,7 +261,16 @@ class _PropertyDetailsState extends State<PropertyDetails> {
         builder: (context) => StatefulBuilder(
           builder: (context, setState) {
             return AlertDialog(
-              title: const Text('Select Payment Method'),
+              title: const Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('Select Payment Method'),
+                  SizedBox(
+                      height: 8), // Add some spacing between title and subtext
+                  Text(
+                      'Kindly upload the image of the receipt/reference number.', style: TextStyle(fontSize: 12),),
+                ],
+              ),
               content: Column(
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -269,7 +278,6 @@ class _PropertyDetailsState extends State<PropertyDetails> {
                   DropdownButtonFormField<String>(
                     decoration: const InputDecoration(
                       labelText: 'Payment Method',
-                      helperText: 'Kindly upload the image of the receipt/reference number',
                       border: OutlineInputBorder(),
                     ),
                     items: ['GCASH', 'Palawan', 'MLhullier', 'Cebuana', 'Cash']
@@ -736,7 +744,8 @@ class _PropertyDetailsState extends State<PropertyDetails> {
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) => AddRating(propertyId: propertyId, name: tenantName),
+        builder: (context) =>
+            AddRating(propertyId: propertyId, name: tenantName),
       ),
     );
   }
