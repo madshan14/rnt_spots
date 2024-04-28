@@ -428,15 +428,17 @@ class _RegisterState extends State<Register> {
         return;
       }
       // Upload image to Firebase Storage
-      final ref = firebase_storage.FirebaseStorage.instance
-          .ref()
-          .child('profile_images')
-          .child('${DateTime.now().millisecondsSinceEpoch}.jpg');
-      await ref.putFile(_imageFile!);
-      final imageUrl = await ref.getDownloadURL();
 
-      // Update user object with image URL
-      newUser.imageUrl = imageUrl;
+      if (selectedRole == "Landlord") {
+        final ref = firebase_storage.FirebaseStorage.instance
+            .ref()
+            .child('profile_images')
+            .child('${DateTime.now().millisecondsSinceEpoch}.jpg');
+        await ref.putFile(_imageFile!);
+        final imageUrl = await ref.getDownloadURL();
+        // Update user object with image URL
+        newUser.imageUrl = imageUrl;
+      }
 
       // Upload images to Firebase Storage
       List<String> imageUrls = [];
